@@ -1,11 +1,9 @@
 # 阶段一，数据探索
 from pathlib import Path
 
-from pandas.core.dtypes import missing
-
 # 设定根目录和数据目录
 BASE_DIR = Path(__file__).resolve().parents[2]
-DATA_DIR = str(BASE_DIR / "data" / "train.csv")
+DATA_PATH = str(BASE_DIR / "data" / "train.csv")
 
 #创建 Spark 入口
 from pyspark.sql import SparkSession
@@ -20,7 +18,7 @@ spark = (SparkSession.builder
 spark.sparkContext.setLogLevel("WARN")
 
 # 读数据
-df = spark.read.csv(DATA_DIR,header=True,inferSchema=True)
+df = spark.read.csv(DATA_PATH,header=True,inferSchema=True)
 
 # 探索数据
 print("=" * 60)
@@ -44,7 +42,7 @@ missing.show(vertical=True, truncate=False)
 # subscribe标签分布情况（是否订阅贷款）
 print("=" * 60)
 print("订阅数量")
-sub_cnt = df.groupBy("subscribe").count().show()
+df.groupBy("subscribe").count().show()
 print("="*60)
 
 # 每种特征的取值数量
@@ -55,12 +53,14 @@ for c in cat_cols:
     n = df.select(c).distinct().count()
     print(f"{c:20s}{n}种取值")
 
-# 隐性缺失unknown的探索
-print("=" * 60)
-print("隐性缺失unknown的探索")
-for c in cat_cols:
-    n = df.filter(F.col(c) == "unknown").count()
-    print(f"{c:20s}{n}个unknown")
+# 探索是否有非法占用符号
+illegal = ["unknown", "?", "-", "NA", "null", "NaN", ""]
+for c in df.columns:
+    for l in illegal:
+        n = df.filter(F.col(c).cast("string") == l).count()
+        if n > 0:
+            print(f"{c:20s}含有{l}{n}个")
+
 
 # 关键特征的取值
 print("=" * 60)
@@ -72,7 +72,7 @@ for c in ["job", "marital", "education", "default", "poutcome", "month", "day_of
 # 数值列统计量
 print("="*60)
 print("数值列统计量")
-num_cols = [c for c,t in df.dtypes if t in ("int", "double", "bigint", "float")]
+num_cols = [c for c,t in df.dtypes if t in ("int", "double", "bigint", "float") and c != "id"]
 df.select(num_cols).describe().show(truncate=False)
 
 # 列分类结论
