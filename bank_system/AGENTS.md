@@ -170,23 +170,24 @@
 - 如用户要求，可输出：数据库建表 SQL、完整模块代码、开题报告片段、向导师汇报话术。
 - **牢记：没有真实实时数据源，必须使用 csv 模拟 Kafka 流。**
 - **不要引入 PowerBI**，可视化交给 Vue。
+- **代码要专业、符合毕设规范**：处理流程完整（检测 → 判断 → 处理 → 说明理由），关键决策要有理论依据（如离群点用 IQR 箱线图法、类别不平衡用 class_weight），不草率删数据；注释清晰、结构分层（子步骤标注）。
 
 ---
 
 ## 九、开发进展与待办（每次会话收尾更新）
 
 > 使用约定：每次会话结束时，让 AI 把本次进展追加到本小节（新条目放最上方，按时间倒序），
-> 保留「当前状态 / 下一步」为最新，方便下次会话直接接续。
+> 保留「当前状态 / 下一步」为最新，方便下次会话直接接续；
+> 同时把本次新遇到的问题与解决办法**追加到根目录 `问题记录与解决方案.txt`**，保持两份记录同步。
 
 ### 当前状态（最新）
-- **环境搭建完成**，阶段 1 推进到**第 2 步「数据清洗」**：step1 数据探索已完善（含 unknown 检查、占位符检查 cast 修复），step2 清洗脚本已改进（unknown 众数填充 + 异常值检查），待跑通后进入第 3 步「特征工程」。
+- **阶段 1 第 2 步「数据清洗」已完成并跑通**：step2_clean.py 全流程正常（unknown 众数填充 + 负数检查 + IQR 离群点检测 + Winsorize 缩尾），清洗结果已保存至 `output/train_clean.csv`。下一步进入第 3 步「特征工程」。
 
 ### 下一步计划（按顺序推进）
-1. 跑通 `step2_clean.py` 数据清洗，观察清洗前后行数差、众数填充结果、unknown 清零。
-2. 阶段 1.3 特征工程（类别编码 + 数值规范化 + 组装特征向量），导出特征配置 JSON。
-3. 阶段 1.4~1.6 模型训练（LR/RF，class_weight 平衡）→ 评估 → 保存模型与特征配置到 models/。
-4. 安装 MySQL，完成阶段 1 最后一步「离线统计写库」。
-5. 阶段 2 Kafka 生产者 → 阶段 3 PyFlink 实时推理 → 阶段 4/5 SpringBoot + Vue 联调。
+1. 阶段 1.3 特征工程：类别编码（StringIndexer）+ 数值规范化（StandardScaler）+ 特征向量组装（VectorAssembler），导出特征配置 JSON。
+2. 阶段 1.4~1.6 模型训练（LR/RF，class_weight 平衡）→ 评估 → 保存模型与特征配置到 models/。
+3. 安装 MySQL，完成阶段 1 最后一步「离线统计写库」。
+4. 阶段 2 Kafka 生产者 → 阶段 3 PyFlink 实时推理 → 阶段 4/5 SpringBoot + Vue 联调。
 
 ### 已完成
 - ✅ pip 国内镜像（清华）配置，下载速度 657KB/s → 4.3MB/s。
@@ -199,13 +200,16 @@
 - ✅ 阶段 1.2 数据清洗脚本 `code/spark_offline/step2_clean.py` 已完善（unknown 众数填充 + 异常值检查，不删行）。
 - ✅ 阶段 1.1 代码审查：修复占位符检查对数值列的 cast 类型报错 bug。
 - ✅ 新增第十节「代码目录与文件命名规范」（约定：给代码前先说明「存放位置 + 文件名 + 用途」）。
+- ✅ 阶段 1.2 数据清洗跑通：unknown 众数填充、IQR 离群点检测（改用 percentile 精确函数）、Winsorize 缩尾（age→21~83、duration→14~4833、campaign→0~45）、pandas 保存。
+- ✅ 解决 Windows 写文件 winutils 版本不匹配问题（hadoop-3.3.6 vs Hadoop 3.5.0），清洗结果改用 pandas to_csv 绕过。
+- ✅ 创建根目录 `问题记录与解决方案.txt`（记录开发问题与解决，供论文撰写）。
 
 ### 遗留问题 / 风险
 - 标签 `subscribe` 类别不平衡（约 6.6 : 1），训练与评估时需处理（class_weight、重点看 F1/召回率）。
 - 离线与实时特征处理逻辑必须严格对齐，否则预测不可信。
 - 无真实流式数据源，需用 csv 模拟 Kafka 流（论文中需明确说明）。
 - **PySpark 4.2.0 对 pandas 3.0 支持不完整**（FutureWarning），代码应避免重度使用 toPandas()，改用 collect() 转 numpy。
-- Windows 无 winutils.exe（HADOOP_HOME 未设置），仅影响 HDFS 功能，读本地文件/写 MySQL 不受影响，可忽略。
+- Windows 写本地文件需 winutils.exe：已下载 hadoop-3.3.6 的 winutils.exe/hadoop.dll 至 `C:\Users\1\dev\hadoop\bin` 并设置 HADOOP_HOME，但**与 Spark 4.2.0 内置的 Hadoop 3.5.0 版本不匹配**，`df.write.csv` 写本地文件仍报 UnsatisfiedLinkError（hadoop 3.5.0 的 winutils 社区尚未提供）。**结论：清洗结果改用 pandas `to_csv` 保存，读数据/写 MySQL（JDBC）均不受影响**。
 - **PyCharm 默认工作目录 = 脚本所在目录**，相对路径会找不到 data/，代码已统一用 pathlib 定位项目根目录（BASE_DIR）规避。
 - **MySQL 尚未安装**，阶段 1 最后一步「离线统计写库」需待 MySQL 就绪。
 - 运行环境统一用全局 Python 3.14（`C:\Users\1\AppData\Local\Programs\Python\Python314`）；项目旧 `.venv` 内含 PySpark 3.0.3（过旧，与 Python 3.14 不兼容），已弃用。
@@ -213,6 +217,7 @@
 - **import 副作用坑**：import 一个带执行逻辑的脚本会运行其全部顶层代码，脚本间不要互相 import；公共逻辑应抽函数并用 `if __name__ == "__main__"` 保护。
 
 ### 会话记录
+- **2026-09-07**：跑通并完成 step2 数据清洗（unknown 众数填充 + 负数检查 + IQR 检测 + Winsorize 缩尾 + pandas 保存）；深入理解离群点概念与检测方法（IQR vs 3σ、缩尾 vs 删除、数据错误 vs 真实离群值）；修复负数检测逻辑漏洞（社会经济指标可为负）；修复 approxQuantile 对极端分位数误差大的问题（改用 percentile 精确函数）；排查并绕过 Windows 写文件 winutils 版本不匹配问题；创建「问题记录与解决方案.txt」。
 - **2026-09-06**：用户动手编写 step1/step2 代码；深入理解缺失值两种形态（null vs unknown）、inferSchema 全量推断机制（samplingRatio 默认 1.0）；排查并修复 step1 占位符检查对数值列的 cast 类型报错；解决 step2 误 import step1 导致重复输出的问题（import 会执行模块全部顶层代码）；重新审视异常值处理（duration=0 属真实业务事件非数据错误，改为「异常值检查」而非删除）；输出改进后的 step2 完整代码。
 - **2026-09-04**：完成环境搭建（pip 清华镜像、numpy/pandas/sklearn/pymysql、JDK17、PySpark 4.2.0），验证 Spark 读 train.csv 成功；解决 PyCharm 解释器问题（`.venv` 旧 PySpark 3.0.3 与 Python 3.14 不兼容 → 切换全局 Python 3.14）；编写并完善阶段 1.1 数据探索脚本（含「隐性缺失 unknown」检查，踩坑解决相对路径问题）；给出阶段 1.2 数据清洗脚本；新增「代码目录与文件命名规范」。
 

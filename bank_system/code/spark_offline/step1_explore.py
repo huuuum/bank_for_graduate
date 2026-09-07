@@ -84,6 +84,7 @@ print("类别特征列：",cat_feature_cols)
 print("数值特征列：",num_feature_cols)
 
 # 结束
+print("="*60)
 spark.stop()
 print("数据探索结束")
-print("="*60)
+
