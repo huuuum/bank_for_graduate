@@ -14,6 +14,7 @@ spark = (SparkSession.builder
          .appName("bank_step2_clean")
          .master("local[2]")
          .getOrCreate())
+spark.sparkContext.setLogLevel("WARN")
 
 # 读取数据
 df = spark.read.csv(DATA_PATH, header=True, inferSchema=True)
