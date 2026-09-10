@@ -1,0 +1,145 @@
+{
+  "numeric_cols": [
+    "age",
+    "duration",
+    "campaign",
+    "pdays",
+    "previous",
+    "emp_var_rate",
+    "cons_price_index",
+    "cons_conf_index",
+    "lending_rate3m",
+    "nr_employed"
+  ],
+  "categorical_cols": [
+    "job",
+    "marital",
+    "education",
+    "default",
+    "housing",
+    "loan",
+    "contact",
+    "month",
+    "day_of_week",
+    "poutcome"
+  ],
+  "numeric_mean": [
+    40.358222222222324,
+    1145.2038777777761,
+    3.315022222222227,
+    773.9919555555557,
+    1.3164444444444448,
+    0.07852888888888915,
+    93.5487853333335,
+    -39.877180444444576,
+    3.302490222222219,
+    5137.21128533335
+  ],
+  "numeric_std": [
+    11.785191498236799,
+    1429.3741061367396,
+    6.906083683506036,
+    326.9343343923605,
+    1.9187333448363404,
+    1.5738311959582432,
+    2.8057862731605985,
+    5.805441863487957,
+    1.6117772219738895,
+    170.6706110589383
+  ],
+  "categorical_mappings": {
+    "job": [
+      "admin.",
+      "blue-collar",
+      "technician",
+      "services",
+      "management",
+      "retired",
+      "entrepreneur",
+      "self-employed",
+      "housemaid",
+      "unemployed",
+      "student"
+    ],
+    "marital": [
+      "married",
+      "single",
+      "divorced"
+    ],
+    "education": [
+      "university.degree",
+      "high.school",
+      "basic.9y",
+      "professional.course",
+      "basic.4y",
+      "basic.6y",
+      "illiterate"
+    ],
+    "default": [
+      "no",
+      "yes"
+    ],
+    "housing": [
+      "yes",
+      "no"
+    ],
+    "loan": [
+      "no",
+      "yes"
+    ],
+    "contact": [
+      "cellular",
+      "telephone"
+    ],
+    "month": [
+      "may",
+      "jul",
+      "aug",
+      "jun",
+      "nov",
+      "apr",
+      "oct",
+      "mar",
+      "sep",
+      "dec"
+    ],
+    "day_of_week": [
+      "thu",
+      "mon",
+      "wed",
+      "tue",
+      "fri"
+    ],
+    "poutcome": [
+      "nonexistent",
+      "failure",
+      "success"
+    ]
+  },
+  "feature_order": [
+    "age",
+    "duration",
+    "campaign",
+    "pdays",
+    "previous",
+    "emp_var_rate",
+    "cons_price_index",
+    "cons_conf_index",
+    "lending_rate3m",
+    "nr_employed",
+    "job",
+    "marital",
+    "education",
+    "default",
+    "housing",
+    "loan",
+    "contact",
+    "month",
+    "day_of_week",
+    "poutcome"
+  ],
+  "label_mappings": {
+    "yes": 1.0,
+    "no": 0.0
+  }
+}
