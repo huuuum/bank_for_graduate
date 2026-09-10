@@ -182,3 +182,36 @@
 要点3：fit(df) 传数据表，inputCol 传列名
   · 构造组件时用 inputCol 指定"处理哪一列"
   · 调用 fit(df) 时传"整个数据表"，组件会从中找 inputCol 列计算参数
+
+--------------------------------------------------------
+八、特征工程阶段的代码问题
+--------------------------------------------------------
+
+问题12：生成器表达式 vs 列表
+  · 现象：VectorAssembler(inputCols=num_cols) 报错
+          Could not convert generator object to list of strings
+  · 原因：(c for c in ...) 是生成器（惰性对象），(...) 是列表；
+          Spark ML 组件的 inputCols 只接受列表
+  · 解决：用方括号 [c for c in ...] 生成列表
+
+问题13：筛选条件 or vs and
+  · 现象：cat_cols 用 t == "string" or c != "subscribe" 导致几乎所有列都被保留
+  · 原因：or 是"或"，只要满足一个条件就保留；排除某列需两个条件同时满足
+  · 解决：用 and 叠加条件：t == "string" and c != "subscribe"
+
+问题14：transform 结果赋错变量
+  · 现象：scaled_df = scaler_model.transform(df) 后，后续仍用 df，
+          导致 df 中无 scaled_num 列
+  · 解决：统一用 df 覆盖赋值：df = scaler_model.transform(df)
+
+问题15：模型对象 vs 模型数据
+  · 现象：json.dump 报 Object of type StringIndexerModel is not JSON serializable
+  · 原因：indexer_models[c] 是 StringIndexerModel 对象（Java 包装，不可序列化），
+          .labels 才是可序列化的映射列表
+  · 解决：导出 .labels（以及 scaler.mean/.std 用 .tolist() 转普通列表）
+  · 经验：导出配置要存的是"数据"，不是"对象本身"
+
+问题16：误导入无关模块
+  · 现象：from idlelib import config 误导入 Python 自带 IDLE 模块
+  · 原因：PyCharm 自动补全误引入
+  · 解决：删除无关导入；注意检查 import 语句

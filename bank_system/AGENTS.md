@@ -171,6 +171,7 @@
 - **牢记：没有真实实时数据源，必须使用 csv 模拟 Kafka 流。**
 - **不要引入 PowerBI**，可视化交给 Vue。
 - **代码要专业、符合毕设规范**：处理流程完整（检测 → 判断 → 处理 → 说明理由），关键决策要有理论依据（如离群点用 IQR 箱线图法、类别不平衡用 class_weight），不草率删数据；注释清晰、结构分层（子步骤标注）。
+- **生成代码前先讲思路**：每次给出代码前，先说明设计思路与思考过程（约束 → 目标 → 倒推 → 选型 → 数据流 → 产出），引导用户理解设计逻辑，而非直接给成品代码。
 
 ---
 
@@ -181,7 +182,7 @@
 > 同时把本次新遇到的问题与解决办法**追加到根目录 `问题记录与解决方案.txt`**，保持两份记录同步。
 
 ### 当前状态（最新）
-- **阶段 1 推进到第 3 步「特征工程」**：step3_feature.py 代码已给出（StringIndexer 类别编码 + StandardScaler 数值规范化 + VectorAssembler 向量组装 + 导出 feature_config.json），用户正在理解代码逻辑，待跑通后进入第 4 步「模型训练」。
+- **阶段 1 推进到第 3 步「特征工程」**：step3_feature.py 已编写完成并修复多个 bug（列表 vs 生成器、and 条件、.labels 导出等），用户已理解特征拼接结构与 fit/transform 范式，待跑通确认（特征维度=20、config.json 生成）后进入第 4 步「模型训练」。
 
 ### 下一步计划（按顺序推进）
 1. 跑通 step3_feature.py，确认特征维度=20、models/feature_config.json 生成正确。
@@ -204,6 +205,7 @@
 - ✅ 解决 Windows 写文件 winutils 版本不匹配问题（hadoop-3.3.6 vs Hadoop 3.5.0），清洗结果改用 pandas to_csv 绕过。
 - ✅ 创建根目录 `问题记录与解决方案.txt`（记录开发问题与解决，供论文撰写）。
 - ✅ 阶段 1.3 特征工程脚本 `code/spark_offline/step3_feature.py` 代码已给出（含导出特征配置 JSON，供 Flink 复用）。
+- ✅ 阶段 1.3 代码审查与修复：生成器→列表、or→and 条件、categorical_mappings 补 .labels、删除误导入 idlelib。
 
 ### 遗留问题 / 风险
 - 标签 `subscribe` 类别不平衡（约 6.6 : 1），训练与评估时需处理（class_weight、重点看 F1/召回率）。
@@ -218,6 +220,7 @@
 - **import 副作用坑**：import 一个带执行逻辑的脚本会运行其全部顶层代码，脚本间不要互相 import；公共逻辑应抽函数并用 `if __name__ == "__main__"` 保护。
 
 ### 会话记录
+- **2026-09-10**：完成 step3 特征工程代码编写与修复；深入理解 Spark ML 范式（fit/transform、inputCol vs inputCols、特征拼接是“拼接”而非“相加”）；用 show() 实际展示数据结构（scaled_num、类别索引、20 维 features）；学习 config 参数取舍判断方法（Flink 复现需要什么就存什么）与代码设计思路（约束→倒推→选型→数据流→产出）；修复多个 bug（生成器 vs 列表、or vs and、categorical_mappings 缺 .labels、误导入 idlelib）。
 - **2026-09-07**：跑通并完成 step2 数据清洗（unknown 众数填充 + 负数检查 + IQR 检测 + Winsorize 缩尾 + pandas 保存）；深入理解离群点概念与检测方法（IQR vs 3σ、缩尾 vs 删除、数据错误 vs 真实离群值）；修复负数检测逻辑漏洞（社会经济指标可为负）；修复 approxQuantile 对极端分位数误差大的问题（改用 percentile 精确函数）；排查并绕过 Windows 写文件 winutils 版本不匹配问题；创建「问题记录与解决方案.txt」；进入第 3 步特征工程，讲解并给出 step3_feature.py 代码（StringIndexer/StandardScaler/VectorAssembler + 导出 feature_config.json），深入讲解 fit/transform 范式（Estimator 学习 vs Transformer 应用）、inputCol（单数）vs inputCols（复数）的区别。
 - **2026-09-06**：用户动手编写 step1/step2 代码；深入理解缺失值两种形态（null vs unknown）、inferSchema 全量推断机制（samplingRatio 默认 1.0）；排查并修复 step1 占位符检查对数值列的 cast 类型报错；解决 step2 误 import step1 导致重复输出的问题（import 会执行模块全部顶层代码）；重新审视异常值处理（duration=0 属真实业务事件非数据错误，改为「异常值检查」而非删除）；输出改进后的 step2 完整代码。
 - **2026-09-04**：完成环境搭建（pip 清华镜像、numpy/pandas/sklearn/pymysql、JDK17、PySpark 4.2.0），验证 Spark 读 train.csv 成功；解决 PyCharm 解释器问题（`.venv` 旧 PySpark 3.0.3 与 Python 3.14 不兼容 → 切换全局 Python 3.14）；编写并完善阶段 1.1 数据探索脚本（含「隐性缺失 unknown」检查，踩坑解决相对路径问题）；给出阶段 1.2 数据清洗脚本；新增「代码目录与文件命名规范」。
