@@ -173,6 +173,8 @@
 - **代码要专业、符合毕设规范**：处理流程完整（检测 → 判断 → 处理 → 说明理由），关键决策要有理论依据（如离群点用 IQR 箱线图法、类别不平衡用 class_weight），不草率删数据；注释清晰、结构分层（子步骤标注）。
 - **生成代码前先讲思路**：每次给出代码前，先说明设计思路与思考过程（约束 → 目标 → 倒推 → 选型 → 数据流 → 产出），引导用户理解设计逻辑，而非直接给成品代码。
 - **记录论文素材**：遇到有研究价值的问题、有意思的现象、可写进论文的分析点，主动记录到根目录 `论文素材记录.txt`（按论文章节分类），供撰写论文使用。
+- **分工约定**：环境配置（装包、装 JDK、下载 winutils、装 MySQL 等）由 AI 协助完成；其余实际操作（写代码、建表、写库、跑脚本等）由用户自己动手，AI 只负责讲解思路、给出参考代码、答疑指导，不替用户执行。
+- **涉及数据出处要严谨**：涉及具体数据来源/时间范围等事实性信息时，不确定的应标注「需查证」或主动查证，不把合理推断说成精确事实。
 
 ---
 
@@ -184,12 +186,12 @@
 > 把有研究价值、可写进论文的内容**追加到根目录 `论文素材记录.txt`**，保持多份记录同步。
 
 ### 当前状态（最新）
-- **阶段 1 推进到第 4 步完成（模型训练与评估）**：step3 特征工程已跑通（特征维度=20、config.json 生成）；step4 训练 LR/RF 完成——LR F1=43.05%、RF F1=55.90%，随机森林更优（已保存 lr_model.joblib / rf_model.joblib）；已给出 step5 特征重要性分析代码，待跑通。
+- **阶段 1 推进到第 6 步（离线统计写库，最后一步）**：step5 特征重要性已跑通（duration 第一、社会经济指标主导）；MySQL 已就绪（服务运行、7 张表已建：6 统计表 + 1 实时预测表）；step6 离线统计脚本已给出，待运行写库。完成后阶段 1 结束，进入阶段 2 Kafka 生产者。
 
 ### 下一步计划（按顺序推进）
-1. 跑通 step5 特征重要性分析，结合业务解读特征排名（重点关注 duration 信息泄露问题）。
-2. 安装 MySQL，完成阶段 1 最后一步「离线统计写库」。
-3. 阶段 2 Kafka 生产者 → 阶段 3 PyFlink 实时推理 → 阶段 4/5 SpringBoot + Vue 联调。
+1. 跑通 step6_offline_stats.py（先填 MySQL 密码），验证 6 张统计表写入成功，阶段 1 结束。
+2. 阶段 2 Kafka 生产者（Python 读 csv 循环发送模拟流到 topic）。
+3. 阶段 3 PyFlink 实时推理（消费 Kafka + 加载模型 + 写 MySQL）→ 阶段 4/5 SpringBoot + Vue 联调。
 
 ### 已完成
 - ✅ pip 国内镜像（清华）配置，下载速度 657KB/s → 4.3MB/s。
@@ -210,6 +212,10 @@
 - ✅ 阶段 1.3 特征工程跑通：特征维度=20，config.json、features.npz 生成正确。
 - ✅ 阶段 1.4 模型训练与评估完成：LR（F1=43.05%、召回率 73.7%）vs RF（F1=55.90%、召回率 58.6%），按 F1 选随机森林，模型已保存 lr_model.joblib / rf_model.joblib。
 - ✅ 阶段 1.5 特征重要性分析代码已给出（step5_feature_importance.py）。
+- ✅ 阶段 1.5 特征重要性分析跑通：duration 第一（0.18），5 个社会经济指标全进前 10，前 10 个特征累计贡献 83%。
+- ✅ MySQL 数据库就绪：服务运行，7 张表已建（overall_stats/age_stats/job_stats/marital_stats/education_stats/month_stats/realtime_prediction）。
+- ✅ 阶段 1.6 离线统计脚本 step6_offline_stats.py 代码已给出（Spark groupBy 统计 + pymysql 写库）。
+- ✅ 新增「论文素材记录.txt」及三条规则（记录论文素材、分工约定、数据出处要严谨）。
 
 ### 遗留问题 / 风险
 - 标签 `subscribe` 类别不平衡（约 6.6 : 1），训练与评估时需处理（class_weight、重点看 F1/召回率）。
@@ -218,13 +224,14 @@
 - **PySpark 4.2.0 对 pandas 3.0 支持不完整**（FutureWarning），代码应避免重度使用 toPandas()，改用 collect() 转 numpy。
 - Windows 写本地文件需 winutils.exe：已下载 hadoop-3.3.6 的 winutils.exe/hadoop.dll 至 `C:\Users\1\dev\hadoop\bin` 并设置 HADOOP_HOME，但**与 Spark 4.2.0 内置的 Hadoop 3.5.0 版本不匹配**，`df.write.csv` 写本地文件仍报 UnsatisfiedLinkError（hadoop 3.5.0 的 winutils 社区尚未提供）。**结论：清洗结果改用 pandas `to_csv` 保存，读数据/写 MySQL（JDBC）均不受影响**。
 - **PyCharm 默认工作目录 = 脚本所在目录**，相对路径会找不到 data/，代码已统一用 pathlib 定位项目根目录（BASE_DIR）规避。
-- **MySQL 尚未安装**，阶段 1 最后一步「离线统计写库」需待 MySQL 就绪。
+- MySQL 服务已运行（3306 端口），7 张表已由用户用 Navicat 建好；写库需用户在 step6 脚本中填入自己的 MySQL 密码。
 - 运行环境统一用全局 Python 3.14（`C:\Users\1\AppData\Local\Programs\Python\Python314`）；项目旧 `.venv` 内含 PySpark 3.0.3（过旧，与 Python 3.14 不兼容），已弃用。
 - **跨类型比较坑**：Spark 中数值列与字符串直接比较会触发 cast 报错，做占位符检查前先 `.cast("string")`。
 - **import 副作用坑**：import 一个带执行逻辑的脚本会运行其全部顶层代码，脚本间不要互相 import；公共逻辑应抽函数并用 `if __name__ == "__main__"` 保护。
+- **Windows 安全策略拦截 .pyd 坑**：Windows 智能应用控制（Smart App Control）或杀毒软件会间歇性拦截 numpy/scipy 的 C 扩展 DLL，报「DLL load failed / 应用程序控制策略已阻止此文件」，表现是"昨天能跑今天报错"，且 pip 重装无效。**解决：关闭智能应用控制（设置→隐私和安全性→Windows 安全中心→应用和浏览器控制→智能应用控制）或将 Python 目录加入杀毒软件白名单**。
 
 ### 会话记录
-- **2026-09-10**：完成 step3 特征工程代码编写与修复（生成器 vs 列表、or vs and、.labels 导出等），跑通生成 config.json/features.npz；深入理解 Spark ML 范式（fit/transform、inputCol vs inputCols、特征拼接）、config 参数取舍与代码设计思路（约束→倒推→选型→数据流→产出）；完成 step4 模型训练与评估（LR F1=43.05% vs RF F1=55.90%，RF 更优），深入理解评估指标（准确率虚高、召回率、混淆矩阵、漏报 vs 误报的业务权衡）；记录「类别不平衡准确率虚高」到问题记录文件；给出 step5 特征重要性分析代码。
+- **2026-09-10**：完成 step3 特征工程（跑通生成 config.json/features.npz）、step4 模型训练（LR F1=43.05% vs RF F1=55.90%，选 RF）、step5 特征重要性（duration 第一、社会经济指标主导，前 10 特征累计 83%）；解决 Windows 智能应用控制拦截 numpy/scipy DLL 的问题（关闭智能应用控制）；核实数据集来源（UCI 葡萄牙银行 2008-2013，纠正之前"2011-2013"的不准确）；设计并建好 MySQL 7 张表；给出 step6 离线统计脚本；新增「论文素材记录.txt」及三条规则（记录论文素材、分工约定、数据出处要严谨）。
 - **2026-09-07**：跑通并完成 step2 数据清洗（unknown 众数填充 + 负数检查 + IQR 检测 + Winsorize 缩尾 + pandas 保存）；深入理解离群点概念与检测方法（IQR vs 3σ、缩尾 vs 删除、数据错误 vs 真实离群值）；修复负数检测逻辑漏洞（社会经济指标可为负）；修复 approxQuantile 对极端分位数误差大的问题（改用 percentile 精确函数）；排查并绕过 Windows 写文件 winutils 版本不匹配问题；创建「问题记录与解决方案.txt」；进入第 3 步特征工程，讲解并给出 step3_feature.py 代码（StringIndexer/StandardScaler/VectorAssembler + 导出 feature_config.json），深入讲解 fit/transform 范式（Estimator 学习 vs Transformer 应用）、inputCol（单数）vs inputCols（复数）的区别。
 - **2026-09-06**：用户动手编写 step1/step2 代码；深入理解缺失值两种形态（null vs unknown）、inferSchema 全量推断机制（samplingRatio 默认 1.0）；排查并修复 step1 占位符检查对数值列的 cast 类型报错；解决 step2 误 import step1 导致重复输出的问题（import 会执行模块全部顶层代码）；重新审视异常值处理（duration=0 属真实业务事件非数据错误，改为「异常值检查」而非删除）；输出改进后的 step2 完整代码。
 - **2026-09-04**：完成环境搭建（pip 清华镜像、numpy/pandas/sklearn/pymysql、JDK17、PySpark 4.2.0），验证 Spark 读 train.csv 成功；解决 PyCharm 解释器问题（`.venv` 旧 PySpark 3.0.3 与 Python 3.14 不兼容 → 切换全局 Python 3.14）；编写并完善阶段 1.1 数据探索脚本（含「隐性缺失 unknown」检查，踩坑解决相对路径问题）；给出阶段 1.2 数据清洗脚本；新增「代码目录与文件命名规范」。
