@@ -4,9 +4,13 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="1050e0b0-22c0-4ec3-8c57-26a5fd4631b6" name="更改" comment="离线统计数据，完成总体统计">
+    <list default="true" id="1050e0b0-22c0-4ec3-8c57-26a5fd4631b6" name="更改" comment="离线统计数据，完成其余统计并写入数据库">
+      <change afterPath="$PROJECT_DIR$/bank_system/code/kafka_producer/csv_producer.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/bank_system/code/spark_offline/step1b_split.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/bank_system/code/spark_offline/step6_offline_stats.py" beforeDir="false" afterPath="$PROJECT_DIR$/bank_system/code/spark_offline/step6_offline_stats.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/bank_system/AGENTS.md" beforeDir="false" afterPath="$PROJECT_DIR$/bank_system/AGENTS.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/bank_system/论文素材记录.txt" beforeDir="false" afterPath="$PROJECT_DIR$/bank_system/论文素材记录.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/bank_system/问题记录与解决方案.txt" beforeDir="false" afterPath="$PROJECT_DIR$/bank_system/问题记录与解决方案.txt" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -44,31 +48,32 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
-    &quot;Python.step1_explore.executor&quot;: &quot;Run&quot;,
-    &quot;Python.step2_clean.executor&quot;: &quot;Run&quot;,
-    &quot;Python.step3_feature.executor&quot;: &quot;Run&quot;,
-    &quot;Python.step4_train.executor&quot;: &quot;Run&quot;,
-    &quot;Python.step5_feature_importance.executor&quot;: &quot;Run&quot;,
-    &quot;Python.step6_offline_stats.executor&quot;: &quot;Run&quot;,
-    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.typescript.service.memoryLimit.init&quot;: &quot;true&quot;,
-    &quot;codeWithMe.voiceChat.enabledByDefault&quot;: &quot;false&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;master&quot;,
-    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
-    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
-    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
-    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
-    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
-    &quot;settings.editor.selected.configurable&quot;: &quot;preferences.lookFeel&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "ModuleVcsDetector.initialDetectionPerformed": "true",
+    "Python.csv_producer.executor": "Run",
+    "Python.step1_explore.executor": "Run",
+    "Python.step2_clean.executor": "Run",
+    "Python.step3_feature.executor": "Run",
+    "Python.step4_train.executor": "Run",
+    "Python.step5_feature_importance.executor": "Run",
+    "Python.step6_offline_stats.executor": "Run",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
+    "RunOnceActivity.git.unshallow": "true",
+    "RunOnceActivity.typescript.service.memoryLimit.init": "true",
+    "codeWithMe.voiceChat.enabledByDefault": "false",
+    "git-widget-placeholder": "master",
+    "node.js.detected.package.eslint": "true",
+    "node.js.detected.package.tslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.tslint": "(autodetect)",
+    "nodejs_package_manager_path": "npm",
+    "settings.editor.selected.configurable": "preferences.lookFeel"
   }
-}</component>
-  <component name="RunManager" selected="Python.step6_offline_stats">
-    <configuration name="step2_clean" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+}]]></component>
+  <component name="RunManager">
+    <configuration name="csv_producer" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
       <module name="PycharmProject" />
       <option name="ENV_FILES" value="" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -77,13 +82,13 @@
         <env name="PYTHONUNBUFFERED" value="1" />
       </envs>
       <option name="SDK_HOME" value="" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/bank_system/code/spark_offline" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/bank_system/code/kafka_producer" />
       <option name="IS_MODULE_SDK" value="true" />
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
       <option name="DEBUG_JUST_MY_CODE" value="false" />
       <option name="RUN_TOOL" value="" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/bank_system/code/spark_offline/step2_clean.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/bank_system/code/kafka_producer/csv_producer.py" />
       <option name="PARAMETERS" value="" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
@@ -190,11 +195,11 @@
     </configuration>
     <recent_temporary>
       <list>
+        <item itemvalue="Python.csv_producer" />
         <item itemvalue="Python.step6_offline_stats" />
         <item itemvalue="Python.step5_feature_importance" />
         <item itemvalue="Python.step4_train" />
         <item itemvalue="Python.step3_feature" />
-        <item itemvalue="Python.step2_clean" />
       </list>
     </recent_temporary>
   </component>
@@ -293,7 +298,15 @@
       <option name="project" value="LOCAL" />
       <updated>1789395092943</updated>
     </task>
-    <option name="localTasksCounter" value="11" />
+    <task id="LOCAL-00011" summary="离线统计数据，完成其余统计并写入数据库">
+      <option name="closed" value="true" />
+      <created>1789481659877</created>
+      <option name="number" value="00011" />
+      <option name="presentableId" value="LOCAL-00011" />
+      <option name="project" value="LOCAL" />
+      <updated>1789481659877</updated>
+    </task>
+    <option name="localTasksCounter" value="12" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -325,6 +338,7 @@
     <MESSAGE value="完成随机森林和逻辑回归模型训练，选择更优模型" />
     <MESSAGE value="完成随机森林特征重要性排名" />
     <MESSAGE value="离线统计数据，完成总体统计" />
-    <option name="LAST_COMMIT_MESSAGE" value="离线统计数据，完成总体统计" />
+    <MESSAGE value="离线统计数据，完成其余统计并写入数据库" />
+    <option name="LAST_COMMIT_MESSAGE" value="离线统计数据，完成其余统计并写入数据库" />
   </component>
 </project>

@@ -246,3 +246,59 @@
   · 表现：昨天能跑今天报错，且 pip 重装无效（策略仍拦截新文件）
   · 解决：关闭智能应用控制（设置→隐私和安全性→Windows 安全中心→
     应用和浏览器控制→智能应用控制）或将 Python 目录加入杀毒软件白名单
+
+--------------------------------------------------------
+十一、代码编写问题
+--------------------------------------------------------
+
+问题19：字符串拼接 Exception 对象报错
+  · 现象：print("写入失败"+e) 报 TypeError: can only concatenate str
+    (not "Exception") to str
+  · 原因：e 是 Exception 对象，不能用 + 与字符串拼接
+  · 解决：print(f"写入失败: {e}") 或 print("写入失败", e)
+
+问题20：省略号 ... 被复制进代码
+  · 现象：for name, data in [..., ...] 报 TypeError: cannot unpack
+    non-iterable ellipsis object
+  · 原因：AI 给代码时用 ... 表示"省略"，用户直接复制；
+    Python 中 ... 是 Ellipsis 字面量对象，不是省略的意思
+  · 解决：删掉带 ... 的示意代码；以后 AI 给代码应用完整代码
+    或明确标注"此处省略需补全"
+
+--------------------------------------------------------
+十二、Kafka 环境与配置问题
+--------------------------------------------------------
+
+问题21：Kafka 4.x format 缺 --standalone
+  · 现象：kafka-storage format 报 "must specify one of: --standalone,
+    --initial-controllers, --no-initial-controllers"
+  · 原因：Kafka 4.x 单机 KRaft 合并模式，controller.quorum.voters 未配置时
+    必须显式声明 --standalone
+  · 解决：format 命令末尾加 --standalone
+
+问题22：Windows 11 24H2 移除 wmic，Kafka 启动脚本报错
+  · 现象：kafka-server-start.bat 报 "'wmic' 不是内部或外部命令"
+  · 原因：脚本用 wmic 检测系统架构（32/64位），Win11 24H2 已移除 wmic
+  · 解决：改脚本删掉 wmic 检测，直接设置 64 位内存
+    set KAFKA_HEAP_OPTS=-Xmx1G -Xms1G
+
+问题23：Kafka 4.x .bat 是 LF 换行符，cmd 解析报"单词碎片"
+  · 现象：启动脚本报 "'ndation'/'nder'/'is' 不是内部或外部命令"等英文单词碎片
+  · 原因：Kafka 4.x 打包的 .bat 用 LF 换行符，Windows cmd 解析不可靠
+  · 解决：用 Python 把文件 LF 统一转 CRLF
+    （先 replace \r\n→\n 再 \n→\r\n）
+
+问题24：topic 名称不一致，消息发错地方（最隐蔽）
+  · 现象：生产者"发送成功"（打印已发送 N 条），消费者却收不到消息
+  · 原因：代码 TOPIC="bank_customer"（下划线）与创建/订阅的 "bank-customers"
+    （连字符）是两个不同 topic；Kafka 默认自动创建不存在的 topic，
+    生产者悄悄发到了错误 topic，无任何报错
+  · 解决：统一 topic 名；排查"收不到消息"先 kafka-topics --list 看 topic 名对不对
+
+问题25：Kafka 残留目录+文件占用导致启动失败
+  · 现象：Kafka 启动报 AccessDeniedException，然后
+    "Shutdown broker because all log dirs have failed"
+  · 原因：误建 topic 残留目录 bank_customer-0 被未关闭的旧 java 进程占用，
+    Kafka 重启清理时重命名失败 → 判定存储损坏 → 自杀关闭
+  · 解决：taskkill 杀残留 java 进程释放文件；改 server.properties 的 log.dirs
+    换新存储目录 C:/kafka-data，重新 format
