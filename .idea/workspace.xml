@@ -4,12 +4,17 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="1050e0b0-22c0-4ec3-8c57-26a5fd4631b6" name="更改" comment="离线统计数据，完成其余统计并写入数据库">
+    <list default="true" id="1050e0b0-22c0-4ec3-8c57-26a5fd4631b6" name="更改" comment="修改代码逻辑">
+      <change afterPath="$PROJECT_DIR$/bank_system/code/flink_realtime/realtime_predict.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/PycharmProject.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/PycharmProject.iml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/bank_system/code/spark_offline/step2_clean.py" beforeDir="false" afterPath="$PROJECT_DIR$/bank_system/code/spark_offline/step2_clean.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/bank_system/code/spark_offline/step3_feature.py" beforeDir="false" afterPath="$PROJECT_DIR$/bank_system/code/spark_offline/step3_feature.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/bank_system/models/config.json" beforeDir="false" afterPath="$PROJECT_DIR$/bank_system/models/config.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/bank_system/output/features.npz" beforeDir="false" afterPath="$PROJECT_DIR$/bank_system/output/features.npz" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/bank_system/code/kafka_producer/csv_producer.py" beforeDir="false" afterPath="$PROJECT_DIR$/bank_system/code/kafka_producer/csv_producer.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/bank_system/code/spark_offline/step4_train.py" beforeDir="false" afterPath="$PROJECT_DIR$/bank_system/code/spark_offline/step4_train.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/bank_system/code/spark_offline/step6_offline_stats.py" beforeDir="false" afterPath="$PROJECT_DIR$/bank_system/code/spark_offline/step6_offline_stats.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/bank_system/models/lr_model.joblib" beforeDir="false" afterPath="$PROJECT_DIR$/bank_system/models/lr_model.joblib" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/bank_system/models/rf_model.joblib" beforeDir="false" afterPath="$PROJECT_DIR$/bank_system/models/rf_model.joblib" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/bank_system/output/evaluation_report.txt" beforeDir="false" afterPath="$PROJECT_DIR$/bank_system/output/evaluation_report.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/bank_system/output/feature_importance.txt" beforeDir="false" afterPath="$PROJECT_DIR$/bank_system/output/feature_importance.txt" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -79,7 +84,7 @@
     &quot;settings.editor.selected.configurable&quot;: &quot;preferences.lookFeel&quot;
   }
 }</component>
-  <component name="RunManager" selected="Python.step3_feature">
+  <component name="RunManager" selected="Python.csv_producer">
     <configuration name="csv_producer" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
       <module name="PycharmProject" />
       <option name="ENV_FILES" value="" />
@@ -152,6 +157,30 @@
       <option name="INPUT_FILE" value="" />
       <method v="2" />
     </configuration>
+    <configuration name="step4_train" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <module name="PycharmProject" />
+      <option name="ENV_FILES" value="" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/bank_system/code/spark_offline" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="DEBUG_JUST_MY_CODE" value="false" />
+      <option name="RUN_TOOL" value="" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/bank_system/code/spark_offline/step4_train.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
     <configuration name="step5_feature_importance" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
       <module name="PycharmProject" />
       <option name="ENV_FILES" value="" />
@@ -176,37 +205,13 @@
       <option name="INPUT_FILE" value="" />
       <method v="2" />
     </configuration>
-    <configuration name="step6_offline_stats" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
-      <module name="PycharmProject" />
-      <option name="ENV_FILES" value="" />
-      <option name="INTERPRETER_OPTIONS" value="" />
-      <option name="PARENT_ENVS" value="true" />
-      <envs>
-        <env name="PYTHONUNBUFFERED" value="1" />
-      </envs>
-      <option name="SDK_HOME" value="" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/bank_system/code/spark_offline" />
-      <option name="IS_MODULE_SDK" value="true" />
-      <option name="ADD_CONTENT_ROOTS" value="true" />
-      <option name="ADD_SOURCE_ROOTS" value="true" />
-      <option name="DEBUG_JUST_MY_CODE" value="false" />
-      <option name="RUN_TOOL" value="" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/bank_system/code/spark_offline/step6_offline_stats.py" />
-      <option name="PARAMETERS" value="" />
-      <option name="SHOW_COMMAND_LINE" value="false" />
-      <option name="EMULATE_TERMINAL" value="false" />
-      <option name="MODULE_MODE" value="false" />
-      <option name="REDIRECT_INPUT" value="false" />
-      <option name="INPUT_FILE" value="" />
-      <method v="2" />
-    </configuration>
     <recent_temporary>
       <list>
+        <item itemvalue="Python.csv_producer" />
+        <item itemvalue="Python.step5_feature_importance" />
+        <item itemvalue="Python.step4_train" />
         <item itemvalue="Python.step3_feature" />
         <item itemvalue="Python.step2_clean" />
-        <item itemvalue="Python.csv_producer" />
-        <item itemvalue="Python.step6_offline_stats" />
-        <item itemvalue="Python.step5_feature_importance" />
       </list>
     </recent_temporary>
   </component>
@@ -313,7 +318,15 @@
       <option name="project" value="LOCAL" />
       <updated>1789481659877</updated>
     </task>
-    <option name="localTasksCounter" value="12" />
+    <task id="LOCAL-00012" summary="修改代码逻辑">
+      <option name="closed" value="true" />
+      <created>1789808279034</created>
+      <option name="number" value="00012" />
+      <option name="presentableId" value="LOCAL-00012" />
+      <option name="project" value="LOCAL" />
+      <updated>1789808279035</updated>
+    </task>
+    <option name="localTasksCounter" value="13" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -357,7 +370,8 @@
     <MESSAGE value="完成随机森林特征重要性排名" />
     <MESSAGE value="离线统计数据，完成总体统计" />
     <MESSAGE value="离线统计数据，完成其余统计并写入数据库" />
-    <option name="LAST_COMMIT_MESSAGE" value="离线统计数据，完成其余统计并写入数据库" />
+    <MESSAGE value="修改代码逻辑" />
+    <option name="LAST_COMMIT_MESSAGE" value="修改代码逻辑" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>

@@ -1,7 +1,6 @@
 import numpy as np
 import joblib
 from pathlib import Path
-from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LogisticRegression
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import (accuracy_score, precision_score, recall_score,
@@ -9,23 +8,20 @@ from sklearn.metrics import (accuracy_score, precision_score, recall_score,
 
 # 定位目录
 BASE_DIR = Path(__file__).resolve().parents[2]
-FEATURES_PATH = str(BASE_DIR / "output" / "features.npz")
+FEATURES_TRAIN_PATH = str(BASE_DIR / "output" / "features.npz")
+FEATURES_TEST_PATH = str(BASE_DIR / "output" / "features_test.npz")
 LR_MODEL_PATH = str(BASE_DIR / "models" / "lr_model.joblib")
 RF_MODEL_PATH = str(BASE_DIR / "models" / "rf_model.joblib")
 EVAL_PATH = str(BASE_DIR / "output" / "evaluation_report.txt")
 
 # 加载数据
-data = np.load(FEATURES_PATH)
-X , y = data["X"], data["y"]
-print("="*60)
-print(f"特征矩阵:X.shape {X.shape}, y.shape {y.shape}")
-
-# 划分数据集
-# stratify用于平衡训练集中的yes和no比例
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42,stratify=y)
+train = np.load(FEATURES_TRAIN_PATH)
+X_train , y_train = train["X"], train["y"]
+test = np.load(FEATURES_TEST_PATH)
+X_test, y_test = test["X"], test["y"]
 print("="*60)
 print(f"训练集数量:{X_train.shape[0]}条,测试集数量:{X_test.shape[0]}")
-print(f"训练集正样本数:{y_train.mean():.2f},测试集正样本数:{y_test.mean():.2f}")
+print(f"训练集正样本占比:{y_train.mean():.2f},测试集正样本占比:{y_test.mean():.2f}")
 
 # 逻辑回归
 lr = LogisticRegression(class_weight="balanced",random_state=42,max_iter=1000)
@@ -53,14 +49,14 @@ results = [evaluate("逻辑回归" , lr),evaluate("随机森林",rf)]
 # 评估结果展示
 for r in results:
     print("="*60)
-    print(f"【{r["name"]}】")
-    print(f"准确率{r["accuracy"]*100:.2f}%")
-    print(f"精确率{r["precision"]*100:.2f}%")
-    print(f"召回率{r["recall"]*100:.2f}%")
-    print(f"f1分数{r["f1"]*100:.2f}%")
+    print(f"【{r['name']}】")
+    print(f"准确率{r['accuracy']*100:.2f}%")
+    print(f"精确率{r['precision']*100:.2f}%")
+    print(f"召回率{r['recall']*100:.2f}%")
+    print(f"f1分数{r['f1']*100:.2f}%")
     print("混淆矩阵:")
-    print(r["cm"])
-    print(r["report"])
+    print(r['cm'])
+    print(r['report'])
 
 # 保存模型
 joblib.dump(lr, LR_MODEL_PATH)

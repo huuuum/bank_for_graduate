@@ -6,7 +6,7 @@ from pathlib import Path
 from kafka import KafkaProducer
 
 BASE_DIR = Path(__file__).resolve().parents[2]
-DATA_PATH = str(BASE_DIR / "data" / "train.csv")
+DATA_PATH = str(BASE_DIR / "output" / "stream_10.csv")
 
 # 配置kafka
 KAFKA_SERVER = ["localhost:9092"]
@@ -38,3 +38,21 @@ except KeyboardInterrupt:
 finally:
     producer.flush()
     producer.close()
+
+
+# 启动 Kafka
+# cd C:\Users\1\dev\kafka_2.13-4.3.1
+# bin\windows\kafka-server-start.bat config\server.properties
+
+# 创建topic（新建终端）
+# cd C:\Users\1\dev\kafka_2.13-4.3.1
+# bin\windows\kafka-topics.bat --create --topic bank-customers --bootstrap-server localhost:9092 --partitions 1 --replication-factor 1
+
+# 确认topic
+# bin\windows\kafka-topics.bat --list --bootstrap-server localhost:9092
+
+# 查看topic是否有数据（再新建一个终端）
+# bin\windows\kafka-console-consumer.bat --topic bank-customers --bootstrap-server localhost:9092 --from-beginning
+
+# 关闭kafka
+# bin\windows\kafka-server-stop.bat
