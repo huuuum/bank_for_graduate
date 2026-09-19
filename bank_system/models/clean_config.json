@@ -1,0 +1,37 @@
+{
+  "unknown_cols": [
+    "job",
+    "marital",
+    "education",
+    "default",
+    "housing",
+    "loan"
+  ],
+  "mode_map": {
+    "job": "admin.",
+    "marital": "married",
+    "education": "university.degree",
+    "default": "no",
+    "housing": "yes",
+    "loan": "no"
+  },
+  "winsorize_bounds": {
+    "age": [
+      21.0,
+      82.51000000000022
+    ],
+    "duration": [
+      15.0,
+      4835.51
+    ],
+    "campaign": [
+      0.0,
+      44.0
+    ]
+  },
+  "winsorize_cols": [
+    "age",
+    "duration",
+    "campaign"
+  ]
+}

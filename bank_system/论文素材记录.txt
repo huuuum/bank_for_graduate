@@ -147,3 +147,25 @@
 · 附加亮点：10% 流数据带 subscribe 标签，Flink 预测后可对比真实值算"实时准确率"，
   直接验证流批一致性（离线 F1 与实时 F1 是否接近）。
 · 论文表述：可写"三段数据严格隔离，训练/评估/流模拟互不污染，符合机器学习数据划分规范"。
+
+========================================
+【17】特征工程防泄漏的落地：fit/transform 分离（train 学参数，test 复用参数）
+（对应章节：详细实现 / 实验设计）
+========================================
+· 场景：step3_feature.py 改造时新增"读 test_20、用已学参数转换"的代码段。
+· 关键设计：Estimator（学习器）与 Transformer（转换器）职责分离——
+  1. StandardScaler / StringIndexer 是 Estimator：只对 70% 训练集 fit()，
+     学习出 mean/std（标准化参数）与类别→索引映射（编码参数）。
+  2. 学出的 scaler_model / indexer_models 是 Transformer：对训练集、测试集、
+     流数据统一 transform()，测试集的值绝不参与参数计算。
+· 为什么：若对测试集也重新 fit()，测试集分布信息会"泄漏"进 mean/std 和
+  编码映射，评估时模型"见过"测试集，指标虚高、无法反映真实泛化能力。
+· 代码体现（step3 末尾新增段，全部复用训练集学好的模型，无一重新 fit）：
+    df_test = num_assembler.transform(df_test)           # 复用组装器
+    df_test = scaler_model.transform(df_test)            # 复用 mean/std
+    for c in cat_cols:
+        df_test = indexer_models[c].transform(df_test)   # 复用编码映射
+· 延伸：流数据同理——Flink 端加载 config.json 里的 mean/std 与编码映射，
+  本质就是"复现 transform()"而非重新学习参数，这是流批特征对齐的机制保证。
+· 论文表述：可写"特征转换参数仅由训练集确定，测试集与流数据复用同一套参数，
+  从机制上杜绝数据泄漏，保证离线评估与实时预测的可信度"。

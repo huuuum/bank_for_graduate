@@ -5,12 +5,11 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="1050e0b0-22c0-4ec3-8c57-26a5fd4631b6" name="更改" comment="离线统计数据，完成其余统计并写入数据库">
-      <change afterPath="$PROJECT_DIR$/bank_system/code/kafka_producer/csv_producer.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/bank_system/code/spark_offline/step1b_split.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/bank_system/AGENTS.md" beforeDir="false" afterPath="$PROJECT_DIR$/bank_system/AGENTS.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/bank_system/论文素材记录.txt" beforeDir="false" afterPath="$PROJECT_DIR$/bank_system/论文素材记录.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/bank_system/问题记录与解决方案.txt" beforeDir="false" afterPath="$PROJECT_DIR$/bank_system/问题记录与解决方案.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/bank_system/code/spark_offline/step2_clean.py" beforeDir="false" afterPath="$PROJECT_DIR$/bank_system/code/spark_offline/step2_clean.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/bank_system/code/spark_offline/step3_feature.py" beforeDir="false" afterPath="$PROJECT_DIR$/bank_system/code/spark_offline/step3_feature.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/bank_system/models/config.json" beforeDir="false" afterPath="$PROJECT_DIR$/bank_system/models/config.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/bank_system/output/features.npz" beforeDir="false" afterPath="$PROJECT_DIR$/bank_system/output/features.npz" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -28,9 +27,17 @@
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
   <component name="GitHubPullRequestSearchHistory">{
+  &quot;history&quot;: [
+    {
+      &quot;state&quot;: &quot;OPEN&quot;,
+      &quot;author&quot;: &quot;huuuum&quot;
+    },
+    {
+      &quot;author&quot;: &quot;huuuum&quot;
+    }
+  ],
   &quot;lastFilter&quot;: {
-    &quot;state&quot;: &quot;OPEN&quot;,
-    &quot;assignee&quot;: &quot;huuuum&quot;
+    &quot;author&quot;: &quot;huuuum&quot;
   }
 }</component>
   <component name="GithubPullRequestsUISettings">{
@@ -48,31 +55,31 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "ModuleVcsDetector.initialDetectionPerformed": "true",
-    "Python.csv_producer.executor": "Run",
-    "Python.step1_explore.executor": "Run",
-    "Python.step2_clean.executor": "Run",
-    "Python.step3_feature.executor": "Run",
-    "Python.step4_train.executor": "Run",
-    "Python.step5_feature_importance.executor": "Run",
-    "Python.step6_offline_stats.executor": "Run",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
-    "RunOnceActivity.git.unshallow": "true",
-    "RunOnceActivity.typescript.service.memoryLimit.init": "true",
-    "codeWithMe.voiceChat.enabledByDefault": "false",
-    "git-widget-placeholder": "master",
-    "node.js.detected.package.eslint": "true",
-    "node.js.detected.package.tslint": "true",
-    "node.js.selected.package.eslint": "(autodetect)",
-    "node.js.selected.package.tslint": "(autodetect)",
-    "nodejs_package_manager_path": "npm",
-    "settings.editor.selected.configurable": "preferences.lookFeel"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
+    &quot;Python.csv_producer.executor&quot;: &quot;Run&quot;,
+    &quot;Python.step1_explore.executor&quot;: &quot;Run&quot;,
+    &quot;Python.step2_clean.executor&quot;: &quot;Run&quot;,
+    &quot;Python.step3_feature.executor&quot;: &quot;Run&quot;,
+    &quot;Python.step4_train.executor&quot;: &quot;Run&quot;,
+    &quot;Python.step5_feature_importance.executor&quot;: &quot;Run&quot;,
+    &quot;Python.step6_offline_stats.executor&quot;: &quot;Run&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.typescript.service.memoryLimit.init&quot;: &quot;true&quot;,
+    &quot;codeWithMe.voiceChat.enabledByDefault&quot;: &quot;false&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;master&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;preferences.lookFeel&quot;
   }
-}]]></component>
-  <component name="RunManager">
+}</component>
+  <component name="RunManager" selected="Python.step3_feature">
     <configuration name="csv_producer" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
       <module name="PycharmProject" />
       <option name="ENV_FILES" value="" />
@@ -97,6 +104,30 @@
       <option name="INPUT_FILE" value="" />
       <method v="2" />
     </configuration>
+    <configuration name="step2_clean" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <module name="PycharmProject" />
+      <option name="ENV_FILES" value="" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/bank_system/code/spark_offline" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="DEBUG_JUST_MY_CODE" value="false" />
+      <option name="RUN_TOOL" value="" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/bank_system/code/spark_offline/step2_clean.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
     <configuration name="step3_feature" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
       <module name="PycharmProject" />
       <option name="ENV_FILES" value="" />
@@ -113,30 +144,6 @@
       <option name="DEBUG_JUST_MY_CODE" value="false" />
       <option name="RUN_TOOL" value="" />
       <option name="SCRIPT_NAME" value="$PROJECT_DIR$/bank_system/code/spark_offline/step3_feature.py" />
-      <option name="PARAMETERS" value="" />
-      <option name="SHOW_COMMAND_LINE" value="false" />
-      <option name="EMULATE_TERMINAL" value="false" />
-      <option name="MODULE_MODE" value="false" />
-      <option name="REDIRECT_INPUT" value="false" />
-      <option name="INPUT_FILE" value="" />
-      <method v="2" />
-    </configuration>
-    <configuration name="step4_train" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
-      <module name="PycharmProject" />
-      <option name="ENV_FILES" value="" />
-      <option name="INTERPRETER_OPTIONS" value="" />
-      <option name="PARENT_ENVS" value="true" />
-      <envs>
-        <env name="PYTHONUNBUFFERED" value="1" />
-      </envs>
-      <option name="SDK_HOME" value="" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/bank_system/code/spark_offline" />
-      <option name="IS_MODULE_SDK" value="true" />
-      <option name="ADD_CONTENT_ROOTS" value="true" />
-      <option name="ADD_SOURCE_ROOTS" value="true" />
-      <option name="DEBUG_JUST_MY_CODE" value="false" />
-      <option name="RUN_TOOL" value="" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/bank_system/code/spark_offline/step4_train.py" />
       <option name="PARAMETERS" value="" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
@@ -195,11 +202,11 @@
     </configuration>
     <recent_temporary>
       <list>
+        <item itemvalue="Python.step3_feature" />
+        <item itemvalue="Python.step2_clean" />
         <item itemvalue="Python.csv_producer" />
         <item itemvalue="Python.step6_offline_stats" />
         <item itemvalue="Python.step5_feature_importance" />
-        <item itemvalue="Python.step4_train" />
-        <item itemvalue="Python.step3_feature" />
       </list>
     </recent_temporary>
   </component>
@@ -323,6 +330,17 @@
                   <entry key="Show.Git.Branches" value="true" />
                 </map>
               </option>
+              <option name="FILTERS">
+                <map>
+                  <entry key="branch">
+                    <value>
+                      <list>
+                        <option value="master" />
+                      </list>
+                    </value>
+                  </entry>
+                </map>
+              </option>
             </State>
           </value>
         </entry>
@@ -340,5 +358,16 @@
     <MESSAGE value="离线统计数据，完成总体统计" />
     <MESSAGE value="离线统计数据，完成其余统计并写入数据库" />
     <option name="LAST_COMMIT_MESSAGE" value="离线统计数据，完成其余统计并写入数据库" />
+  </component>
+  <component name="XDebuggerManager">
+    <breakpoint-manager>
+      <breakpoints>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/bank_system/code/kafka_producer/csv_producer.py</url>
+          <line>1</line>
+          <option name="timeStamp" value="1" />
+        </line-breakpoint>
+      </breakpoints>
+    </breakpoint-manager>
   </component>
 </project>

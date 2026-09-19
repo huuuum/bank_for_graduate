@@ -3,13 +3,13 @@ import json
 from pathlib import Path
 import numpy as np
 
-
 # 设定目录
 BASE_DIR = Path(__file__).resolve().parents[2]
-CLEAN_PATH = str(BASE_DIR / "output" / "train_clean.csv")
+TRAIN_CLEAN_PATH = str(BASE_DIR / "output" / "train_70_clean.csv")
+TEST_CLEAN_PATH = str(BASE_DIR / "output" / "test_20_clean.csv")
 FEATURES_CONFIG_PATH = str(BASE_DIR / "models" / "config.json")
-FEATURES_PATH = str(BASE_DIR / "output" / "features.npz")
-
+FEATURES_TRAIN_PATH = str(BASE_DIR / "output" / "features.npz")
+FEATURES_TEST_PATH = str(BASE_DIR / "output" / "features_test.npz")
 from pyspark.sql import SparkSession
 from pyspark.sql import functions as F
 from pyspark.ml.feature import StringIndexer, VectorAssembler, StandardScaler
@@ -21,7 +21,7 @@ spark = (SparkSession.builder
          .getOrCreate())
 spark.sparkContext.setLogLevel("WARN")
 
-df = spark.read.csv(CLEAN_PATH, header=True, inferSchema=True)
+df = spark.read.csv(TRAIN_CLEAN_PATH, header=True, inferSchema=True)
 
 # 设定特征列
 cat_cols = [c for c,t in df.dtypes if t == "string" and c != "subscribe"]
@@ -89,17 +89,36 @@ with open(FEATURES_CONFIG_PATH, "w" ,encoding="utf-8") as f:
 print("文件已保存于", FEATURES_CONFIG_PATH)
 
 # 特征矩阵保存
-rows = df.select("features", "label").collect()
-X = np.array([r["features"].toArray() for r in rows])
-y = np.array([r["label"] for r in rows])
-np.savez(FEATURES_PATH, X=X, y=y)
+def save_features(df, path):
+    rows = df.select("features", "label").collect()
+    X = np.array([r["features"].toArray() for r in rows])
+    y = np.array([r["label"] for r in rows])
+    np.savez(path, X=X, y=y)
+    return X,y
+X_train, y_train = save_features(df, FEATURES_TRAIN_PATH)
 
 # 结果预览
 print("="*60)
-print(f"特征维度{X.shape[1]}({len(num_cols)}数值列+{len(cat_cols)}类别列)")
-print(f"样本数量{X.shape[0]}")
-print(f"标签分布:yes={int(sum(y==1))}, no={int(sum(y==0))}")
+print(f"训练集特征维度{X_train.shape[1]}({len(num_cols)}数值列+{len(cat_cols)}类别列)")
+print(f"训练集样本数量{X_train.shape[0]}")
+print(f"训练集标签分布:yes={int(sum(y_train==1))}, no={int(sum(y_train==0))}")
 df.select("features","label").show(5,truncate=False)
+
+# 测试集处理
+df_test = spark.read.csv(TEST_CLEAN_PATH, header=True, inferSchema=True)
+df_test = num_assembler.transform(df_test)
+df_test = scaler_model.transform(df_test)
+for c in cat_cols:
+    df_test = indexer_models[c].transform(df_test)
+df_test = final_assembler.transform(df_test)
+df_test = df_test.withColumn("label", F.when(F.col("subscribe") == "yes", 1.0).otherwise(0.0))
+
+X_test, y_test = save_features(df_test, FEATURES_TEST_PATH)
+print("=" * 60)
+print(f"测试集特征维度 {X_test.shape[1]}，样本数 {X_test.shape[0]}")
+print(f"测试集标签分布 yes={int(sum(y_test == 1))}, no={int(sum(y_test == 0))}")
+
+df.select("features", "label").show(5, truncate=False)
 
 spark.stop()
 print("特征工程结束")

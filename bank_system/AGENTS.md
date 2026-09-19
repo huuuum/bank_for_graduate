@@ -186,14 +186,13 @@
 > 把有研究价值、可写进论文的内容**追加到根目录 `论文素材记录.txt`**，保持多份记录同步。
 
 ### 当前状态（最新）
-- **阶段 1、2 已全部完成，采纳导师方案 70/20/10 后进入数据链路改造**：阶段 1（Spark 离线训练+统计）✅、阶段 2（Kafka 模拟流）✅ 链路已打通；导师要求训练/评估/流数据 70/20/10 严格隔离，step1b_split.py 已跑通（15750/4500/2250，三段 yes 占比均≈13.12%）；下一步改造 step2/3/4，让清洗与特征参数只从 70% 训练集学习（避免数据泄漏）。
+- **70/20/10 数据链路改造进行中**：step2_clean.py ✅ 跑通（清洗参数只从 train_70 学，生成 clean_config.json + 三段 *_clean.csv）；step3_feature.py ✅ 跑通（fit/transform 分离，config.json 从 70% 学，新增 test_20 转换生成 features_test.npz）；step4_train.py 代码已给出（删内部 train_test_split，70% 训练 + 20% 评估）**待运行**；csv_producer.py 待改（数据源改 stream_10.csv，一行路径）。
 
 ### 下一步计划（按顺序推进）
-1. 改造 step2_clean.py：数据源改 train_70.csv，清洗参数（众数/缩尾边界）只从 70% 训练集学习并保存，同时用该参数清洗 test_20 和 stream_10。
-2. 改造 step3_feature.py：数据源改 70% 清洗结果，config.json 参数只从训练集学，并转换 test_20。
-3. 改造 step4_train.py：删除内部 train_test_split，70% 训练 + 20% 评估。
-4. 改 csv_producer.py：数据源改 stream_10.csv（改一行路径）。
-5. 阶段 3 PyFlink 实时推理（消费 Kafka + 加载模型 + 用 config.json 参数处理流数据 + 对比真实标签算实时准确率 + 写 MySQL）→ 阶段 4/5 SpringBoot + Vue 联调。
+1. 运行 step4_train.py：确认 70/20 严格隔离下的评估指标（对比旧 F1=55.9%，小幅下降属正常，说明消除了数据泄漏虚高），重训并覆盖 lr_model.joblib / rf_model.joblib（当前模型文件仍是 Sep 11 旧版，与 config.json 特征错位，必须重跑）。
+2. 改 csv_producer.py：数据源 data/train.csv → output/stream_10.csv（改一行路径）。
+3. 阶段 3 PyFlink 实时推理：消费 Kafka topic bank-customers + 加载 models/rf_model.joblib + 用 clean_config.json（清洗）+ config.json（特征）复现离线逻辑 + 对比 subscribe 真实标签算实时准确率 + 写 MySQL realtime_prediction 表。
+4. 阶段 4/5 SpringBoot 后端 + Vue 前端联调。
 
 ### 已完成
 - ✅ pip 国内镜像（清华）配置，下载速度 657KB/s → 4.3MB/s。
@@ -226,6 +225,9 @@
 - ✅ 解决 Kafka 残留目录+文件占用导致启动失败（换新存储目录 C:/kafka-data），整条链路打通（生产者→Kafka→消费者收到 3 条 JSON），阶段 2 完成。
 - ✅ 采纳导师方案 70/20/10，新增 step1b_split.py（分层抽样切分 15750/4500/2250）并跑通。
 - ✅ 新增「论文素材记录.txt」及三条规则（记录论文素材、分工约定、数据出处要严谨）。
+- ✅ step2_clean.py 70/20/10 改造跑通：清洗参数（众数/缩尾边界）只从 train_70 学习，保存 clean_config.json，用同一套参数清洗 train_70/test_20/stream_10 三段。
+- ✅ step3_feature.py 70/20/10 改造跑通：fit/transform 分离，config.json 参数只从 70% 学，新增 test_20 复用参数转换，生成 features.npz（训练 15750）+ features_test.npz（测试 4500）。
+- ✅ 新增两条 AI 应答约束：「代码交付方式」（AI 不直接改代码文件，只贴参考代码由用户自写）+「对话长度提醒」（对话过长提醒换新对话省 token）。
 
 ### 遗留问题 / 风险
 - 标签 `subscribe` 类别不平衡（约 6.6 : 1），训练与评估时需处理（class_weight、重点看 F1/召回率）。
@@ -243,6 +245,7 @@
 - **数据泄漏铁律**：70/20/10 切分后，清洗参数（众数/缩尾边界）与特征参数（编码映射/标准化）必须只从 70% 训练集学习，再应用到测试集和流数据，否则评估虚高、预测不可信。
 
 ### 会话记录
+- **2026-09-18**：接续 handoff 文件推进 70/20/10 数据链路改造；step2 改造跑通（清洗参数只从 train_70 学 + 保存 clean_config.json + 三段清洗）；step3 改造跑通（fit/transform 分离 + 新增 test_20 转换 + features_test.npz）；step4 代码已给出（删内部切分，待运行）；确立「AI 只贴参考代码、不直接改文件」+「对话过长提醒换新对话」两条规则；整理 git 回滚操作（仓库根为 E:/PycharmProject，非 bank_system）。
 - **2026-09-17**：阶段 2 Kafka 全流程（下载 Kafka 4.3.1、装 kafka-python、修复 --standalone/wmic/LF 三个坑、topic 名不一致、残留目录启动失败换新目录、链路打通）；深入讨论"为什么生产者发原始数据而非清洗后数据"（流批一体核心：实时端复刻离线清洗）；讨论数据模拟方式（读 csv 回放 vs 随机生成，选回放）；采纳导师方案 70/20/10（数据划分+数据泄漏概念），新增 step1b_split.py 跑通。
 - **2026-09-15**：用户编写 step6 离线统计脚本，深入理解数据库字段对应关系（靠位置而非名字）、.first()[0] 取值（agg 返回 DataFrame 而非数值）、group_stats 通用统计（groupBy+agg+count+sum(when) 0/1 转换技巧）；代码审查修复 print+e 拼接报错、filter 注释概念错误、省略号 ... 字面量（Ellipsis）被复制进代码导致报错。
 - **2026-09-10**：完成 step3 特征工程（跑通生成 config.json/features.npz）、step4 模型训练（LR F1=43.05% vs RF F1=55.90%，选 RF）、step5 特征重要性（duration 第一、社会经济指标主导，前 10 特征累计 83%）；解决 Windows 智能应用控制拦截 numpy/scipy DLL 的问题（关闭智能应用控制）；核实数据集来源（UCI 葡萄牙银行 2008-2013，纠正之前"2011-2013"的不准确）；设计并建好 MySQL 7 张表；给出 step6 离线统计脚本；新增「论文素材记录.txt」及三条规则（记录论文素材、分工约定、数据出处要严谨）。
