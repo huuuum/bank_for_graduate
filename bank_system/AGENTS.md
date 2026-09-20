@@ -186,13 +186,12 @@
 > 把有研究价值、可写进论文的内容**追加到根目录 `论文素材记录.txt`**，保持多份记录同步。
 
 ### 当前状态（最新）
-- **70/20/10 数据链路改造进行中**：step2_clean.py ✅ 跑通（清洗参数只从 train_70 学，生成 clean_config.json + 三段 *_clean.csv）；step3_feature.py ✅ 跑通（fit/transform 分离，config.json 从 70% 学，新增 test_20 转换生成 features_test.npz）；step4_train.py 代码已给出（删内部 train_test_split，70% 训练 + 20% 评估）**待运行**；csv_producer.py 待改（数据源改 stream_10.csv，一行路径）。
+- **阶段 3 PyFlink 实时推理进行中**：环境已配通（Python 3.11 独立 venv `.flink-venv` + PyFlink 2.2.1 + numpy 2.1.3 + scikit-learn 1.9.0 + kafka connector jar `flink-sql-connector-kafka-5.0.0-2.2.jar`）；端到端验证 stream_10 全量 2250 条实时准确率 **88.89%**；`code/flink_realtime/realtime_predict.py` 完整代码已给出（checkpoint 断点续传 + INSERT IGNORE 幂等 + 临时建连 + list→dict 索引 + 事件时间），**待用户写入运行**；运行前需先执行 `ALTER TABLE realtime_prediction ADD UNIQUE KEY uk_customer (customer_id)`。
 
 ### 下一步计划（按顺序推进）
-1. 运行 step4_train.py：确认 70/20 严格隔离下的评估指标（对比旧 F1=55.9%，小幅下降属正常，说明消除了数据泄漏虚高），重训并覆盖 lr_model.joblib / rf_model.joblib（当前模型文件仍是 Sep 11 旧版，与 config.json 特征错位，必须重跑）。
-2. 改 csv_producer.py：数据源 data/train.csv → output/stream_10.csv（改一行路径）。
-3. 阶段 3 PyFlink 实时推理：消费 Kafka topic bank-customers + 加载 models/rf_model.joblib + 用 clean_config.json（清洗）+ config.json（特征）复现离线逻辑 + 对比 subscribe 真实标签算实时准确率 + 写 MySQL realtime_prediction 表。
-4. 阶段 4/5 SpringBoot 后端 + Vue 前端联调。
+1. 用户在 Navicat 执行 `ALTER TABLE realtime_prediction ADD UNIQUE KEY uk_customer (customer_id);`（若表内已有重复 customer_id 需先 TRUNCATE）。
+2. 写入并运行 `code/flink_realtime/realtime_predict.py`：窗口 A 启动 Kafka → 窗口 B 跑 csv_producer.py（全局 py）→ 窗口 C 用 `.flink-venv\Scripts\python.exe` 跑 realtime_predict.py，验证实时准确率 88%~89% + realtime_prediction 入库 2250 条（第二轮循环起被幂等跳过）。
+3. 阶段 4/5 SpringBoot 后端 + Vue 前端联调。
 
 ### 已完成
 - ✅ pip 国内镜像（清华）配置，下载速度 657KB/s → 4.3MB/s。
@@ -228,6 +227,13 @@
 - ✅ step2_clean.py 70/20/10 改造跑通：清洗参数（众数/缩尾边界）只从 train_70 学习，保存 clean_config.json，用同一套参数清洗 train_70/test_20/stream_10 三段。
 - ✅ step3_feature.py 70/20/10 改造跑通：fit/transform 分离，config.json 参数只从 70% 学，新增 test_20 复用参数转换，生成 features.npz（训练 15750）+ features_test.npz（测试 4500）。
 - ✅ 新增两条 AI 应答约束：「代码交付方式」（AI 不直接改代码文件，只贴参考代码由用户自写）+「对话长度提醒」（对话过长提醒换新对话省 token）。
+- ✅ step4_train.py 跑通（70% 训练 + 20% 评估严格隔离）：RF 准确率 88.02%、F1 56.36%（略升于旧 55.9%，消除数据泄漏后指标未降反稳），lr/rf 模型已重训覆盖（Sep 19 17:15），与新 config.json 特征对齐。
+- ✅ csv_producer.py 数据源改 `output/stream_10.csv`（一行路径）并跑通。
+- ✅ 阶段 3 PyFlink 环境配通：Python 3.11.9（winget 装）+ 独立 venv `.flink-venv` + PyFlink 2.2.1 + numpy 2.1.3 + scipy 1.17.1 + scikit-learn 1.9.0 + pyarrow 16.1.0 + pymysql；kafka connector jar 下载至 `code/flink_realtime/lib/`。
+- ✅ PyFlink 版本选型踩坑并解决：1.18.1（beam/pyarrow 只支持 numpy 1.x，加载 numpy 2.x 模型报 numpy._core 缺失）→ 2.3.0（无 kafka connector）→ 最终 2.2.1。
+- ✅ 端到端验证：纯 Python 复现「清洗→特征→预测」，stream_10 全量 2250 条实时准确率 88.89%，证明实时特征逻辑与离线严格对齐。
+- ✅ PyFlink UDF 执行链路验证通过（from_collection + map + ProcessFunction + execute），修复 beam worker 找不到 python 问题（venv Scripts 加 PATH + set_python_executable）。
+- ✅ 阶段 3 代码 `realtime_predict.py` 完整给出（含 checkpoint 断点续传 + INSERT IGNORE 幂等 + 临时建连 + list→dict 索引 + 事件时间），待用户写入运行。
 
 ### 遗留问题 / 风险
 - 标签 `subscribe` 类别不平衡（约 6.6 : 1），训练与评估时需处理（class_weight、重点看 F1/召回率）。
@@ -243,8 +249,14 @@
 - **Windows 安全策略拦截 .pyd 坑**：Windows 智能应用控制（Smart App Control）或杀毒软件会间歇性拦截 numpy/scipy 的 C 扩展 DLL，报「DLL load failed / 应用程序控制策略已阻止此文件」，表现是"昨天能跑今天报错"，且 pip 重装无效。**解决：关闭智能应用控制（设置→隐私和安全性→Windows 安全中心→应用和浏览器控制→智能应用控制）或将 Python 目录加入杀毒软件白名单**。
 - **Kafka 4.x Windows 适配坑多**：format 需 --standalone；Win11 24H2 移除 wmic 导致启动脚本报错；.bat 打包成 LF 换行符导致 cmd 解析报"单词碎片"。**已逐一修复，Kafka 存储目录改为 C:/kafka-data**。停止 Kafka 若用 kafka-server-stop.bat 也报 wmic 错误，需同样修复。
 - **数据泄漏铁律**：70/20/10 切分后，清洗参数（众数/缩尾边界）与特征参数（编码映射/标准化）必须只从 70% 训练集学习，再应用到测试集和流数据，否则评估虚高、预测不可信。
+- **PyFlink 与 Python 版本强耦合**：全局 Python 3.14 装不了 PyFlink（apache-flink 2.x 依赖 apache-beam/grpcio 编译失败；1.x 的 beam worker 官方只支持到 3.11）。已用独立 Python 3.11 venv `.flink-venv` 隔离，PySpark 用全局 3.14、PyFlink 用 3.11，互不干扰。
+- **numpy 跨版本 pickle 不兼容**：离线模型用 numpy 2.5.3 训练，numpy 1.x 加载报 `ModuleNotFoundError: numpy._core`；必须 numpy 2.x。venv 用 2.1.3（Python 3.11 装不了 2.5.x，但 2.1.3 有 numpy._core 可正常加载）。
+- **Flink 2.3 无 kafka connector**：文档明确 "no SQL jar available yet for 2.3"，已降级 Flink 2.2.1 + flink-sql-connector-kafka 5.0.0-2.2。
+- **PyFlink 本地跑必须**：脚本开头把 venv Scripts 和 JDK bin 前置到 PATH，并 `env.set_python_executable(venv python)`，否则 beam worker 执行 `python -c ...` 找不到解释器报 IOException。
+- **realtime_prediction 需先加唯一索引**：`ALTER TABLE realtime_prediction ADD UNIQUE KEY uk_customer (customer_id)`，否则 INSERT IGNORE 幂等不生效、生产者循环发送会无限重复插入。
 
 ### 会话记录
+- **2026-09-19**：step4 跑通（RF F1=56.36%，消除泄漏后指标未降反稳）；csv_producer 数据源改 stream_10.csv 跑通；阶段 3 PyFlink 环境从零配通（装 Python 3.11 + 独立 venv + PyFlink 版本选型踩坑 1.18→2.3→2.2.1 + 下载 kafka connector jar）；端到端验证实时准确率 88.89%；给出 realtime_predict.py 完整代码（checkpoint+幂等+临时建连+dict 索引+事件时间）；对用户提出的 6 高危 + 3 中等代码问题逐一评审并给决策表。
 - **2026-09-18**：接续 handoff 文件推进 70/20/10 数据链路改造；step2 改造跑通（清洗参数只从 train_70 学 + 保存 clean_config.json + 三段清洗）；step3 改造跑通（fit/transform 分离 + 新增 test_20 转换 + features_test.npz）；step4 代码已给出（删内部切分，待运行）；确立「AI 只贴参考代码、不直接改文件」+「对话过长提醒换新对话」两条规则；整理 git 回滚操作（仓库根为 E:/PycharmProject，非 bank_system）。
 - **2026-09-17**：阶段 2 Kafka 全流程（下载 Kafka 4.3.1、装 kafka-python、修复 --standalone/wmic/LF 三个坑、topic 名不一致、残留目录启动失败换新目录、链路打通）；深入讨论"为什么生产者发原始数据而非清洗后数据"（流批一体核心：实时端复刻离线清洗）；讨论数据模拟方式（读 csv 回放 vs 随机生成，选回放）；采纳导师方案 70/20/10（数据划分+数据泄漏概念），新增 step1b_split.py 跑通。
 - **2026-09-15**：用户编写 step6 离线统计脚本，深入理解数据库字段对应关系（靠位置而非名字）、.first()[0] 取值（agg 返回 DataFrame 而非数值）、group_stats 通用统计（groupBy+agg+count+sum(when) 0/1 转换技巧）；代码审查修复 print+e 拼接报错、filter 注释概念错误、省略号 ... 字面量（Ellipsis）被复制进代码导致报错。

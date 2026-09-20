@@ -302,3 +302,56 @@
     Kafka 重启清理时重命名失败 → 判定存储损坏 → 自杀关闭
   · 解决：taskkill 杀残留 java 进程释放文件；改 server.properties 的 log.dirs
     换新存储目录 C:/kafka-data，重新 format
+
+问题26：PyFlink 在 Python 3.14 上装不上（版本地狱）
+  · 现象：pip install apache-flink 报错，依赖 apache-beam 编译 grpcio-tools
+    失败；apache-flink 2.x 的 build 依赖拉入 apache-beam，beam 又拉入
+    grpcio-tools==1.62.1（需源码编译，Python 3.14 无预编译 wheel）
+  · 原因：Python 3.14 太新，大数据 Python 生态（grpcio/pyarrow 等）未跟上；
+    且 Flink 1.x 的 Python worker 官方只支持到 Python 3.11
+  · 解决：用 winget 另装 Python 3.11.9，建独立 venv `.flink-venv`，
+    在 venv 内装 PyFlink；PySpark 继续用全局 3.14、PyFlink 用 3.11，互不干扰
+  · 经验：大数据组件（Spark/Flink）对 Python 版本支持滞后，多版本 venv 隔离
+    是标准做法
+
+问题27：numpy 跨版本 pickle 不兼容（numpy._core 缺失）
+  · 现象：离线模型（numpy 2.5.3 训练）在 numpy 1.x 环境 joblib.load 报
+    ModuleNotFoundError: No module named 'numpy._core'
+  · 原因：numpy 2.0 起核心模块从 numpy.core 迁移到 numpy._core，
+    用 numpy 2.x 序列化的数组 pickle 引用了 numpy._core，numpy 1.x 无此模块
+  · 解决：实时端必须用 numpy 2.x；venv 选 numpy 2.1.3（Python 3.11 装不了
+    2.5.x，但 2.1.3 有 numpy._core，可正常加载 2.5.3 训练的模型）
+  · 经验：离线训练与实时推理的环境版本（尤其 numpy）需对齐，
+    否则模型文件无法跨版本反序列化
+
+问题28：Flink 2.3 无 kafka connector
+  · 现象：按最新版配 Flink 2.3.0，查文档发现 kafka connector 一栏写着
+    "There is no SQL jar (yet) available for Flink version 2.3"
+  · 原因：Flink 2.3 发布太新，connector 未跟上（connector 独立于 core 发布）
+  · 解决：降级 apache-flink 到 2.2.1，用 flink-sql-connector-kafka-5.0.0-2.2.jar
+    （fat jar，含 kafka-clients 等依赖），下载至 code/flink_realtime/lib/
+  · 经验：选 Flink 版本前先确认 connector 可用性，新版不一定配套
+
+问题29：PyFlink beam worker 找不到 python 解释器
+  · 现象：执行含 Python UDF 的 Flink 任务报 java.io.IOException:
+    "Failed to execute the command: python -c import pyflink..."
+  · 原因：Flink 的 beam worker 用 `python` 命令（不带路径）启动 Python
+    执行环境，但 Windows PATH 里 python 指向 Microsoft Store 的占位符
+    （非真实解释器），输出为空
+  · 解决：脚本开头把 venv 的 Scripts 目录和 JDK bin 前置到 PATH，
+    并 env.set_python_executable(venv 的 python.exe)，确保 worker 能找到
+  · 经验：PyFlink 本地模式必须保证 `python` 与 `java` 都在 PATH 可被调用
+
+问题30：Flink 实时写库的流处理正确性（长连接 + 无 checkpoint + 无幂等）
+  · 现象：初版代码 ProcessFunction.open() 长持有 pymysql 连接、未开启
+    checkpoint、INSERT 无幂等，存在三个隐患：
+    ① pymysql 长连接闲置会被 MySQL wait_timeout 断开，且非线程安全；
+    ② 不开 checkpoint，任务崩溃重启从 earliest 从头消费、重复插入；
+    ③ 生产者无限循环发 stream_10，同 customer_id 反复插入、表无限膨胀
+  · 解决：
+    ① 改为每条消息临时建连、finally 关闭；
+    ② env.enable_checkpointing(5000) 开断点续传（at-least-once）；
+    ③ customer_id 加唯一索引 + INSERT IGNORE，重复消息幂等跳过
+    （②③ 组合实现"等价 exactly-once"）
+  · 经验：流处理写入外部系统的三大正确性要素 = 断点续传（checkpoint）
+    + 幂等写入（唯一键）+ 连接管理（避免长连接）
