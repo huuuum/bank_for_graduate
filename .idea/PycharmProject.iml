@@ -5,6 +5,7 @@
       <sourceFolder url="file://$MODULE_DIR$/bank_system/.flink-venv/Lib/site-packages" isTestSource="false" />
       <excludeFolder url="file://$MODULE_DIR$/.venv" />
       <excludeFolder url="file://$MODULE_DIR$/bank/.venv" />
+      <excludeFolder url="file://$MODULE_DIR$/bank_system/.flink-venv" />
     </content>
     <orderEntry type="jdk" jdkName="Python 3.14 (PycharmProject) (3)" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />

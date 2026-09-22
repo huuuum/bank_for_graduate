@@ -2,6 +2,7 @@
 import json
 import time
 import csv
+import datetime
 from pathlib import Path
 from kafka import KafkaProducer
 
@@ -28,6 +29,7 @@ count = 0
 try:
     while True:
         for row in rows:
+            row["event_time"] = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             producer.send(TOPIC,value=row)
             count += 1
             if count % 500 == 0:

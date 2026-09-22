@@ -175,6 +175,9 @@
 - **记录论文素材**：遇到有研究价值的问题、有意思的现象、可写进论文的分析点，主动记录到根目录 `论文素材记录.txt`（按论文章节分类），供撰写论文使用。
 - **分工约定**：环境配置（装包、装 JDK、下载 winutils、装 MySQL 等）由 AI 协助完成；其余实际操作（写代码、建表、写库、跑脚本等）由用户自己动手，AI 只负责讲解思路、给出参考代码、答疑指导，不替用户执行。
 - **涉及数据出处要严谨**：涉及具体数据来源/时间范围等事实性信息时，不确定的应标注「需查证」或主动查证，不把合理推断说成精确事实。
+- **代码交付方式**：AI 不直接 write/edit 改代码文件，只贴参考代码 + 讲思路，由用户自己写入运行。
+- **对话长度提醒**：对话过长时主动提醒用户换新对话，节省 token。
+- **排错优先级（重要）**：排查 bug 时**优先检查用户自己写入的代码**，再排查环境/依赖/API 版本问题。曾因用户重写代码时改错 topic 名（bank-customer→bank-customers）、目录名（model→models）、漏传函数参数（build_feature 缺 label_index）、漏调写库函数（_write_to_mysql）、SQL 缺空格等导致"无输出"，需先逐行对照参考代码，再怀疑环境。
 
 ---
 
@@ -186,12 +189,12 @@
 > 把有研究价值、可写进论文的内容**追加到根目录 `论文素材记录.txt`**，保持多份记录同步。
 
 ### 当前状态（最新）
-- **阶段 3 PyFlink 实时推理进行中**：环境已配通（Python 3.11 独立 venv `.flink-venv` + PyFlink 2.2.1 + numpy 2.1.3 + scikit-learn 1.9.0 + kafka connector jar `flink-sql-connector-kafka-5.0.0-2.2.jar`）；端到端验证 stream_10 全量 2250 条实时准确率 **88.89%**；`code/flink_realtime/realtime_predict.py` 完整代码已给出（checkpoint 断点续传 + INSERT IGNORE 幂等 + 临时建连 + list→dict 索引 + 事件时间），**待用户写入运行**；运行前需先执行 `ALTER TABLE realtime_prediction ADD UNIQUE KEY uk_customer (customer_id)`。
+- **阶段 3 PyFlink 实时推理 ✅ 完成**：`code/flink_realtime/realtime_predict.py` 跑通（消费 Kafka → 清洗 → 特征 → RF 推理 → 写 MySQL + 实时准确率 88%~89%），realtime_prediction 入库 2250 条（INSERT IGNORE 幂等生效）。**离线（Spark）+ 模拟流（Kafka）+ 实时（Flink）三大引擎链路全部打通**，进入阶段 4/5 展示层（SpringBoot 后端 + Vue 前端）。
 
 ### 下一步计划（按顺序推进）
-1. 用户在 Navicat 执行 `ALTER TABLE realtime_prediction ADD UNIQUE KEY uk_customer (customer_id);`（若表内已有重复 customer_id 需先 TRUNCATE）。
-2. 写入并运行 `code/flink_realtime/realtime_predict.py`：窗口 A 启动 Kafka → 窗口 B 跑 csv_producer.py（全局 py）→ 窗口 C 用 `.flink-venv\Scripts\python.exe` 跑 realtime_predict.py，验证实时准确率 88%~89% + realtime_prediction 入库 2250 条（第二轮循环起被幂等跳过）。
-3. 阶段 4/5 SpringBoot 后端 + Vue 前端联调。
+1. 阶段 4 SpringBoot 后端：搭建脚手架（SpringBoot + JDBC/MyBatis + MySQL），封装 RESTful 接口——① 离线统计报表接口（overall_stats/age_stats/job_stats/marital_stats/education_stats/month_stats 六张表）；② 实时预测结果列表接口（realtime_prediction）；③ 前端统计图表所需的聚合接口。
+2. 阶段 5 Vue 前端：搭建脚手架（Vue + ECharts），对接后端接口，渲染——客户基础信息表格、实时预测结果看板、统计图表（年龄/职业/婚姻/教育/月份分布、高意向客户占比）。
+3. 系统整体联调：Kafka 生产者 → Flink → MySQL → SpringBoot → Vue 全链路跑通，截图 + 整理实验数据，撰写论文。
 
 ### 已完成
 - ✅ pip 国内镜像（清华）配置，下载速度 657KB/s → 4.3MB/s。
@@ -234,6 +237,10 @@
 - ✅ 端到端验证：纯 Python 复现「清洗→特征→预测」，stream_10 全量 2250 条实时准确率 88.89%，证明实时特征逻辑与离线严格对齐。
 - ✅ PyFlink UDF 执行链路验证通过（from_collection + map + ProcessFunction + execute），修复 beam worker 找不到 python 问题（venv Scripts 加 PATH + set_python_executable）。
 - ✅ 阶段 3 代码 `realtime_predict.py` 完整给出（含 checkpoint 断点续传 + INSERT IGNORE 幂等 + 临时建连 + list→dict 索引 + 事件时间），待用户写入运行。
+- ✅ 阶段 3 跑通：`realtime_predict.py` 实时准确率 88%~89%，realtime_prediction 入库 2250 条（INSERT IGNORE 幂等生效）。
+- ✅ 修复用户重写 realtime_predict.py 时引入的 5 处 bug：TOPIC 名（bank-customer→bank-customers）、目录名（model→models）、clean_row 循环（clean_cfg→clean_cfg["unknown_cols"]）、build_feature 漏传 label_index、漏调 _write_to_mysql、SQL 缺空格。
+- ✅ 排查并解决 Kafka 启动失败：delete topic 后 bank-customers-0 目录被锁（AccessDeniedException）→ 判定 log dir failed 自杀，换新存储目录 C:/kafka-data2 + 重新 format 解决。
+- ✅ 新增 AI 应答约束「排错优先级」（优先检查用户代码再怀疑环境）。
 
 ### 遗留问题 / 风险
 - 标签 `subscribe` 类别不平衡（约 6.6 : 1），训练与评估时需处理（class_weight、重点看 F1/召回率）。
@@ -254,8 +261,10 @@
 - **Flink 2.3 无 kafka connector**：文档明确 "no SQL jar available yet for 2.3"，已降级 Flink 2.2.1 + flink-sql-connector-kafka 5.0.0-2.2。
 - **PyFlink 本地跑必须**：脚本开头把 venv Scripts 和 JDK bin 前置到 PATH，并 `env.set_python_executable(venv python)`，否则 beam worker 执行 `python -c ...` 找不到解释器报 IOException。
 - **realtime_prediction 需先加唯一索引**：`ALTER TABLE realtime_prediction ADD UNIQUE KEY uk_customer (customer_id)`，否则 INSERT IGNORE 幂等不生效、生产者循环发送会无限重复插入。
+- **Kafka delete topic 后目录锁定**：delete topic 后 Kafka 重启时重命名 bank-customers-0 目录报 AccessDeniedException（目录被占用/文件锁），判定 log dir failed 自杀。已换新存储目录 C:/kafka-data2（server.properties 的 log.dirs 已改）。旧目录 C:/kafka-data 待用户手动删除。
 
 ### 会话记录
+- **2026-09-22**：阶段 3 跑通（实时准确率 88%~89%，入库 2250 条幂等）；排查 realtime_predict.py 用户重写引入的 5 处 bug（TOPIC/目录名/循环/漏传参数/漏调写库/SQL 缺空格）；排查 Kafka 启动失败（delete topic 后目录锁定 AccessDeniedException → 换新目录 C:/kafka-data2）；新增「排错优先级」约束；Kafka 存储目录改为 C:/kafka-data2。
 - **2026-09-19**：step4 跑通（RF F1=56.36%，消除泄漏后指标未降反稳）；csv_producer 数据源改 stream_10.csv 跑通；阶段 3 PyFlink 环境从零配通（装 Python 3.11 + 独立 venv + PyFlink 版本选型踩坑 1.18→2.3→2.2.1 + 下载 kafka connector jar）；端到端验证实时准确率 88.89%；给出 realtime_predict.py 完整代码（checkpoint+幂等+临时建连+dict 索引+事件时间）；对用户提出的 6 高危 + 3 中等代码问题逐一评审并给决策表。
 - **2026-09-18**：接续 handoff 文件推进 70/20/10 数据链路改造；step2 改造跑通（清洗参数只从 train_70 学 + 保存 clean_config.json + 三段清洗）；step3 改造跑通（fit/transform 分离 + 新增 test_20 转换 + features_test.npz）；step4 代码已给出（删内部切分，待运行）；确立「AI 只贴参考代码、不直接改文件」+「对话过长提醒换新对话」两条规则；整理 git 回滚操作（仓库根为 E:/PycharmProject，非 bank_system）。
 - **2026-09-17**：阶段 2 Kafka 全流程（下载 Kafka 4.3.1、装 kafka-python、修复 --standalone/wmic/LF 三个坑、topic 名不一致、残留目录启动失败换新目录、链路打通）；深入讨论"为什么生产者发原始数据而非清洗后数据"（流批一体核心：实时端复刻离线清洗）；讨论数据模拟方式（读 csv 回放 vs 随机生成，选回放）；采纳导师方案 70/20/10（数据划分+数据泄漏概念），新增 step1b_split.py 跑通。
