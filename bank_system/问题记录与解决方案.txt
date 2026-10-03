@@ -355,3 +355,15 @@
     （②③ 组合实现"等价 exactly-once"）
   · 经验：流处理写入外部系统的三大正确性要素 = 断点续传（checkpoint）
     + 幂等写入（唯一键）+ 连接管理（避免长连接）
+
+问题31：Kafka delete topic 后目录锁定导致启动失败
+  · 现象：执行 kafka-topics --delete 后重启 Kafka，报
+    java.nio.file.AccessDeniedException: C:\kafka-data\bank-customers-0 -> ...-delete，
+    然后 ERROR Shutdown broker because all log dirs in C:\kafka-data have failed
+  · 原因：topic 标记删除后，Kafka 重启时要重命名/清理 bank-customers-0 数据目录，
+    但该目录被占用（文件锁：残留句柄/杀毒软件/资源管理器），重命名失败，
+    Kafka 判定整个存储目录失败 → 自杀关闭
+  · 解决：换新存储目录 C:/kafka-data2（server.properties 改 log.dirs），
+    重新 kafka-storage format --standalone，重启；旧目录待手动删除
+  · 经验：Windows 上 Kafka 目录被锁是高频问题，换新存储目录是最快解法；
+    排查顺序：先看 logs/server.log 的 ERROR/WARN，找 AccessDenied 或 log dir failed
