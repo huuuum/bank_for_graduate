@@ -367,3 +367,16 @@
     重新 kafka-storage format --standalone，重启；旧目录待手动删除
   · 经验：Windows 上 Kafka 目录被锁是高频问题，换新存储目录是最快解法；
     排查顺序：先看 logs/server.log 的 ERROR/WARN，找 AccessDenied 或 log dir failed
+
+问题32：step6 离线统计表重复累积（每跑一次多一批数据）
+  · 现象：overall_stats 4 条、age_stats 20 条（去重后 5）、job_stats 44 条（去重 11）、
+    marital_stats 12（去重 3）、education_stats 28（去重 7）、month_stats 40（去重 10），
+    6 张统计表都累积了约 4 倍数据（step6 在 9-15 跑了 4 次）
+  · 原因：step6_offline_stats.py 的 insert_rows 函数只 INSERT、从不清理，
+    每次运行都追加一批统计结果，语义是"追加"而非"覆盖"
+  · 影响：后端 SELECT * 返回重复行，前端柱状图出现重复柱子；
+    overall_stats 需 ORDER BY id DESC LIMIT 1 取最新
+  · 解决：insert_rows 里 INSERT 前加 cursor.execute(f"TRUNCATE TABLE {table}")，
+    改后重跑一次 step6 自动清空重插；overall_stats 查询保留 LIMIT 1 兜底
+  · 经验：写库脚本要区分"追加"与"覆盖"语义；统计快照表应 TRUNCATE 后重插，
+    避免历史数据累积导致前端重复展示

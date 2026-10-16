@@ -208,3 +208,24 @@
   3. 两者组合：at-least-once 的重复 + 幂等写入 → 最终效果等价 exactly-once。
 · 论文表述：可写"采用 checkpoint 断点续传与唯一键幂等写入相结合的方案，
   在 at-least-once 传输语义下实现端到端恰好一次的效果，避免重复预测入库"。
+
+========================================
+【21】Service 层设计原则：有无业务计算决定是否与 Mapper 一一对应
+（对应章节：系统详细设计 / 系统总体设计）
+========================================
+· 现象：StatsService 与 StatsMapper 一一对应（每个 Mapper 方法对应一个 Service
+  方法，Service 只是透传）；RealtimeService 与 RealtimeMapper 非一一对应。
+· 根因（一句话）：Service 层的价值 = 承载「业务计算逻辑」。
+  1. 离线统计（StatsService）：查询是纯读、无额外计算，故 Service 与 Mapper
+     一一对应、看似"多余"——但它保留了分层解耦与未来扩展点（如加环比、
+     加过滤条件），Controller 也不该直接依赖 Mapper。
+  2. 实时预测（RealtimeService）：有业务计算——
+     getList 需做分页换算 offset=(page-1)×size；
+     getHighIntentRatio 需组合 countAll + countYes 两个查询算出 yesRate。
+     这些逻辑不属于 Controller（不该放请求层），也不属于 Mapper（不该塞进 SQL），
+     正好落在 Service 层，故非一一对应。
+· 深层结论：三层架构中 Service 层不可省——即使现在只是透传，它也是
+  「业务逻辑的归属地 + 与 Controller/Mapper 解耦的缓冲层」。
+· 论文表述：可写"Service 层按业务域划分，负责业务计算与编排；无计算的数据
+  读取可直接透传，有计算（分页换算、比率聚合）则封装于 Service，避免业务
+  逻辑侵入 Controller 或 SQL"。

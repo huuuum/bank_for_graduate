@@ -189,10 +189,10 @@
 > 把有研究价值、可写进论文的内容**追加到根目录 `论文素材记录.txt`**，保持多份记录同步。
 
 ### 当前状态（最新）
-- **阶段 3 PyFlink 实时推理 ✅ 完成**：`code/flink_realtime/realtime_predict.py` 跑通（消费 Kafka → 清洗 → 特征 → RF 推理 → 写 MySQL + 实时准确率 88%~89%），realtime_prediction 入库 2250 条（INSERT IGNORE 幂等生效）。**离线（Spark）+ 模拟流（Kafka）+ 实时（Flink）三大引擎链路全部打通**，进入阶段 4/5 展示层（SpringBoot 后端 + Vue 前端）。
+- **阶段 4 SpringBoot 后端 ⏳ 进行中**：数据库初始化完成（`backend/db/init.sql` 8 张表含新增 customer 主表）+ 后端骨架就位（pom.xml/启动类/Result/PageResult/CorsConfig/8 实体/3 Mapper/StatsService+Impl/RealtimeService 接口）。**待补**：RealtimeServiceImpl、CustomerService(+Impl)、3 个 Controller，之后启动联调。阶段 1/2/3（Spark+Kafka+Flink）三大引擎链路已全部打通。
 
 ### 下一步计划（按顺序推进）
-1. 阶段 4 SpringBoot 后端：搭建脚手架（SpringBoot + JDBC/MyBatis + MySQL），封装 RESTful 接口——① 离线统计报表接口（overall_stats/age_stats/job_stats/marital_stats/education_stats/month_stats 六张表）；② 实时预测结果列表接口（realtime_prediction）；③ 前端统计图表所需的聚合接口。
+1. 阶段 4 SpringBoot 后端收尾：补 RealtimeServiceImpl（分页 offset 换算 + 高意向占比 yesRate 计算）、CustomerService/CustomerServiceImpl（分页）、StatsController/RealtimeController/CustomerController 三个 Controller；清理脚手架残留（删 application.properties、删或改 test 类包名、可删 mapper-locations）；启动后浏览器验证 9 个接口返回 JSON。
 2. 阶段 5 Vue 前端：搭建脚手架（Vue + ECharts），对接后端接口，渲染——客户基础信息表格、实时预测结果看板、统计图表（年龄/职业/婚姻/教育/月份分布、高意向客户占比）。
 3. 系统整体联调：Kafka 生产者 → Flink → MySQL → SpringBoot → Vue 全链路跑通，截图 + 整理实验数据，撰写论文。
 
@@ -241,6 +241,12 @@
 - ✅ 修复用户重写 realtime_predict.py 时引入的 5 处 bug：TOPIC 名（bank-customer→bank-customers）、目录名（model→models）、clean_row 循环（clean_cfg→clean_cfg["unknown_cols"]）、build_feature 漏传 label_index、漏调 _write_to_mysql、SQL 缺空格。
 - ✅ 排查并解决 Kafka 启动失败：delete topic 后 bank-customers-0 目录被锁（AccessDeniedException）→ 判定 log dir failed 自杀，换新存储目录 C:/kafka-data2 + 重新 format 解决。
 - ✅ 新增 AI 应答约束「排错优先级」（优先检查用户代码再怀疑环境）。
+- ✅ 阶段 4 数据库层：新增 `backend/db/init.sql`（8 张表集中建表，含方案B的 customer 客户主表 22 列，IF NOT EXISTS 不覆盖旧表），已用 Navicat 执行建好 customer 表。
+- ✅ 阶段 4 后端骨架：pom.xml（SpringBoot 3.2.5 + MyBatis 3.0.3 + MySQL驱动 + Lombok）、application.yml、启动类、Result/PageResult 统一返回、CorsConfig 跨域。
+- ✅ 阶段 4 数据访问层：8 个实体类（BigDecimal 映射 DECIMAL、LocalDateTime 映射 DATETIME、Customer 用别名 default_flag 规避 default 保留字）+ 3 个 Mapper（StatsMapper/RealtimeMapper/CustomerMapper，按业务域划分，纯注解 @Select）。
+- ✅ 阶段 4 业务层部分：StatsService(+Impl) 完成（纯透传无业务计算）、RealtimeService 接口完成（含分页 offset 换算 + 高意向占比计算）。
+- ✅ 确立「Service 层设计原则」：有无业务计算决定 Service 是否与 Mapper 一一对应（已记论文素材21）。
+- ✅ 排查统计表重复累积：overall_stats/5 张分类表累积约 4 倍（step6 无 TRUNCATE），定 TRUNCATE 根治 + overall_stats LIMIT 1 兜底。
 
 ### 遗留问题 / 风险
 - 标签 `subscribe` 类别不平衡（约 6.6 : 1），训练与评估时需处理（class_weight、重点看 F1/召回率）。
@@ -262,8 +268,12 @@
 - **PyFlink 本地跑必须**：脚本开头把 venv Scripts 和 JDK bin 前置到 PATH，并 `env.set_python_executable(venv python)`，否则 beam worker 执行 `python -c ...` 找不到解释器报 IOException。
 - **realtime_prediction 需先加唯一索引**：`ALTER TABLE realtime_prediction ADD UNIQUE KEY uk_customer (customer_id)`，否则 INSERT IGNORE 幂等不生效、生产者循环发送会无限重复插入。
 - **Kafka delete topic 后目录锁定**：delete topic 后 Kafka 重启时重命名 bank-customers-0 目录报 AccessDeniedException（目录被占用/文件锁），判定 log dir failed 自杀。已换新存储目录 C:/kafka-data2（server.properties 的 log.dirs 已改）。旧目录 C:/kafka-data 待用户手动删除。
+- **step6 统计表重复累积**：insert_rows 只 INSERT 不清空，每跑一次 6 张表多一批（当前 overall_stats 4 条、age_stats 20 条≈4 倍）。**解决：insert_rows 里 INSERT 前加 `cursor.execute(f"TRUNCATE TABLE {table}")`，改后重跑一次 step6 自动清空重插**。
+- **backend 脚手架残留**：① application.properties（仅 spring.application.name）与 application.yml 并存，建议删 properties；② src/test 的 BackendApplicationTests.java 包名错（com.example.backend，应 com.bank.system），不删则 mvn test 失败；③ application.yml 的 mybatis.mapper-locations 用纯注解可不配。
+- **import_customer.py 运行注意**：要用全局 Python 3.14 跑（裸 `python` 指向 3.11 无 pymysql）；文件名曾被误写 import_custumer.py（拼写错误）。
 
 ### 会话记录
+- **2026-10-14**：进入阶段 4 后端搭建。交付 init.sql（8 表集中建表含 customer 主表，字段精确对齐实际库——subscribe_rate/avg_age 等实为 DECIMAL 而非 DOUBLE）；讲清建表脚本归属 backend/db/（数据库是后端私有数据源、前端不直连库）；给第 1 轮脚手架 + 第 2 轮实体/Mapper/Service/Controller 全量代码；讲 Mapper 按业务域分三接口的设计哲学；排查 6 张统计表累积 4 倍脏数据（step6 无 TRUNCATE，定 TRUNCATE 根治 + LIMIT 1 兜底）；确立 Service 层设计原则（有无业务计算决定是否与 Mapper 一一对应，素材21）；回应 IDEA 破解诉求（拒绝破解，给 Navicat 执行 SQL + 学生教育授权 + Community 够用三条合法路径）。
 - **2026-09-22**：阶段 3 跑通（实时准确率 88%~89%，入库 2250 条幂等）；排查 realtime_predict.py 用户重写引入的 5 处 bug（TOPIC/目录名/循环/漏传参数/漏调写库/SQL 缺空格）；排查 Kafka 启动失败（delete topic 后目录锁定 AccessDeniedException → 换新目录 C:/kafka-data2）；新增「排错优先级」约束；Kafka 存储目录改为 C:/kafka-data2。
 - **2026-09-19**：step4 跑通（RF F1=56.36%，消除泄漏后指标未降反稳）；csv_producer 数据源改 stream_10.csv 跑通；阶段 3 PyFlink 环境从零配通（装 Python 3.11 + 独立 venv + PyFlink 版本选型踩坑 1.18→2.3→2.2.1 + 下载 kafka connector jar）；端到端验证实时准确率 88.89%；给出 realtime_predict.py 完整代码（checkpoint+幂等+临时建连+dict 索引+事件时间）；对用户提出的 6 高危 + 3 中等代码问题逐一评审并给决策表。
 - **2026-09-18**：接续 handoff 文件推进 70/20/10 数据链路改造；step2 改造跑通（清洗参数只从 train_70 学 + 保存 clean_config.json + 三段清洗）；step3 改造跑通（fit/transform 分离 + 新增 test_20 转换 + features_test.npz）；step4 代码已给出（删内部切分，待运行）；确立「AI 只贴参考代码、不直接改文件」+「对话过长提醒换新对话」两条规则；整理 git 回滚操作（仓库根为 E:/PycharmProject，非 bank_system）。
